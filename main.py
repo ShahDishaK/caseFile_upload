@@ -35,7 +35,13 @@ CORSHelper.setup_cors(app)
 # Request validation error
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return APIHelper.send_error_response(errorMessage=f"{exc.errors()[0]['loc'][1]} {exc.errors()[0]['msg']}")
+    if exc.errors()[0]['type'] == 'value_error':
+        return APIHelper.send_error_response(
+            errorMessageKey =f"{exc.errors()[0]['msg']}"
+        )
+    else:
+        return APIHelper.send_error_response(
+            errorMessageKey =f"{exc.errors()[0]['loc'][1]} {exc.errors()[0]['msg']}")
 
 # Including the routes
 app.include_router(auth)
