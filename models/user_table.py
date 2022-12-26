@@ -11,6 +11,6 @@ users = Table(
     Column("name", String(255)),
     Column("email", String(255)),
     Column("password", String(255)),
-    Column("createdAt", DateTime),
-    Column("updatedAt", DateTime),
+    Column("created_at", DateTime),
+    Column("updated_at", DateTime),
 )
