@@ -1,12 +1,18 @@
 # Importing libraries
+from dtos.auth_models import TokenModel
+from dtos.base_response_model import BaseResponseModel
 from helper.api_helper import APIHelper
-from schemas.auth_models import LoginRequest
+from helper.token_helper import TokenHelper
+from helper.hashing import Hash
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
+
 
 class AuthController:
-    
-    """This is a example of a login method"""
-    """Please update or add methods according to you need"""
-
-    # Login api implementation
-    def login(request: LoginRequest, locale: str = "en"):
-        return APIHelper.send_success_response(locale=locale)
+    def login(request: OAuth2PasswordRequestForm) -> BaseResponseModel:
+        user = Hash.authenticate_user(
+            username=request.username, password=request.password)
+        access_token = TokenHelper.create_access_token(
+            data={"id": user.id}
+        )
+        response = TokenModel(access_token=access_token, **user.__dict__)
+        return APIHelper.send_success_response(data=response, successMessageKey='translations.LOGIN_SUCCESS')

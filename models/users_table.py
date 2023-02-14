@@ -1,16 +1,17 @@
 # Importing libraries
 from sqlalchemy import Table, Column
-from sqlalchemy.sql.sqltypes import DateTime, Integer, String
+from sqlalchemy.sql.sqltypes import DateTime, Integer, Text, Boolean
 from config.db_config import meta
 
 # Initializing
-users = Table(
+users_table = Table(
     "users",
     meta,
     Column("id", Integer, primary_key=True),
-    Column("name", String(255)),
-    Column("email", String(255)),
-    Column("password", String(255)),
+    Column("email", Text),
+    Column("password", Text),
+    Column("is_admin", Boolean),
     Column("created_at", DateTime),
     Column("updated_at", DateTime),
+    extend_existing=True
 )

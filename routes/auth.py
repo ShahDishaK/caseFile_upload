@@ -1,12 +1,11 @@
-#Importing libraries
-from fastapi import APIRouter, Request
+# Importing libraries
+from fastapi import APIRouter, Depends
 from controllers.auth_controller import AuthController
-from schemas.auth_models import LoginRequest
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
 # Declaring router
 auth = APIRouter(tags=['Authentication'])
 
-# Login API
 @auth.post('/login')
-def login(user: LoginRequest, request: Request):
-    return AuthController.login(request=user, locale= request.headers['accept-language'])
+async def login(request: OAuth2PasswordRequestForm = Depends()):
+    return AuthController.login(request)

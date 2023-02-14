@@ -6,5 +6,8 @@ from typing import Any, Optional
 class BaseResponseModel(BaseModel):
     data: Any
     message: Optional[str] = None
-    error: Optional[str] = None
 
+
+class BaseErrorModel(BaseModel):
+    data: Any
+    error: Optional[str] = None
