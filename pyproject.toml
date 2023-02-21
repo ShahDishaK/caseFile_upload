@@ -7,9 +7,9 @@ authors = ["seaflux.tech"]
 [tool.poetry.dependencies]
 python = "^3.9"
 uvicorn = "^0.20.0"
-SQLAlchemy = "^2.0.2"
+SQLAlchemy = "^2.0.3"
 PyMySQL = "^1.0.2"
-fastapi = "^0.89.1"
+fastapi = "^0.92.0"
 python-dotenv = "^0.21.1"
 passlib = "^1.7.4"
 python-jose = "^3.3.0"

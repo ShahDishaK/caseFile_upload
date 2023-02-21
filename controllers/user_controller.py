@@ -13,8 +13,8 @@ class UserController:
         with engine.connect() as db:
             password = Hash.get_hash(request.password)
             new_user = db.execute(users_table.insert().values(
-                email=request.email, password=password, is_admin=request.is_admin).returning()).fetchone()
-        return APIHelper.send_success_response(data=UserModel(**new_user), successMessageKey='translations.USER_CREATED')
+                email=request.email, password=password, is_admin=request.is_admin).returning(*users_table.c)).fetchone()
+        return APIHelper.send_success_response(data=UserModel(**new_user._mapping), successMessageKey='translations.USER_CREATED')
 
     def delete_user(user_id: int) -> BaseResponseModel:
         with engine.connect() as db:
@@ -25,4 +25,5 @@ class UserController:
         with engine.connect() as db:
             users = db.execute(users_table.select().offset(
                 (page - 1) * size).limit(size)).fetchall()
-        return APIHelper.send_success_response(data=users, successMessageKey='translations.SUCCESS')
+        user_list = list(map(lambda user: UserModel(**user._mapping), users))
+        return APIHelper.send_success_response(data=user_list, successMessageKey='translations.SUCCESS')
