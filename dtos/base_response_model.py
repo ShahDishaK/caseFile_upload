@@ -9,5 +9,5 @@ class BaseResponseModel(BaseModel):
 
 
 class BaseErrorModel(BaseModel):
-    data: Any
+    data: Optional[Any] = None
     error: Optional[str] = None

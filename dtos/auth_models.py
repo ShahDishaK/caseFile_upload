@@ -4,13 +4,14 @@ from datetime import datetime
 
 
 class UserModel(BaseModel):
-    id: str
+    name: str
     email: str
-    is_admin: bool
-    created_at: datetime
-    updated_at: datetime
+    first_name: str
+    last_name: str
+    password: str
+    role: str
 
 
-class TokenModel(UserModel):
+class TokenModel(BaseModel):
     access_token: str
     token_type: Optional[str] = 'Bearer'

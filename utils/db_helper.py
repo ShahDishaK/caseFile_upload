@@ -1,5 +1,5 @@
 from config.db_config import engine
-from models.users_table import users_table
+from models.users_table import User as users_table
 
 class DBHelper:
     def get_user_by_email(email: str):

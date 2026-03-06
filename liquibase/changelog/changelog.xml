@@ -1,0 +1,435 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <!-- ===================== -->
+    <!-- COMPANIES TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-companies-table" author="disha">
+        <createTable tableName="companies">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="Address" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="phoneNumber" type="VARCHAR(15)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="email" type="VARCHAR(30)"/>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- USERS TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-users-table" author="disha">
+
+        <createTable tableName="users">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="firstName" type="VARCHAR(255)"/>
+            <column name="lastName" type="VARCHAR(255)"/>
+
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="phoneNumber" type="VARCHAR(15)"/>
+
+            <column name="password" type="VARCHAR(255)"/>
+
+            <column name="role" type="VARCHAR(50)"/>
+
+            <column name="companyId" type="INT"/>
+
+            <column name="isDeleted" type="BOOLEAN" defaultValueBoolean="false"/>
+
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="users"
+                baseColumnNames="companyId"
+                referencedTableName="companies"
+                referencedColumnNames="id"
+                constraintName="fk_users_company"/>
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- CASES TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-cases-table" author="disha">
+
+        <createTable tableName="cases">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="caseNumber" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="VARCHAR(40)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="staffId" type="INT"/>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- LAWYERS TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-lawyers-table" author="disha">
+
+        <createTable tableName="lawyers">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="user_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="specialization" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="caseId" type="INT"/>
+            <column name="clientId" type="INT"/>
+            <column name="sessionId" type="INT"/>
+            <column name="taskId" type="INT"/>
+            <column name="invoiceId" type="INT"/>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="lawyers"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_lawyers_user"/>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- STAFF TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-staff-table" author="disha">
+
+        <createTable tableName="staff">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="user_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lawyerId" type="INT"/>
+            <column name="documentId" type="INT"/>
+            <column name="taskId" type="INT"/>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="staff"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_staff_user"/>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- CLIENTS TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-clients-table" author="disha">
+
+        <createTable tableName="clients">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="user_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="caseId" type="INT"/>
+            <column name="documentId" type="INT"/>
+            <column name="invoiceId" type="INT"/>
+            <column name="sessionId" type="INT"/>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="clients"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_clients_user"/>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- TASKS TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-tasks-table" author="disha">
+
+        <createTable tableName="tasks">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="caseId" type="INT"/>
+            <column name="assignedTo" type="INT"/>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- DOCUMENTS TABLE -->
+    <!-- ===================== -->
+
+    <changeSet id="create-documents-table" author="disha">
+
+        <createTable tableName="documents">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="documentLink" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="fileType" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="caseId" type="INT"/>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- COURT SESSIONS -->
+    <!-- ===================== -->
+
+    <changeSet id="create-courtSessions-table" author="disha">
+
+        <createTable tableName="courtSessions">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="sessionDate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="courtName" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="caseId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lawyerId" type="INT"/>
+            <column name="clientId" type="INT"/>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- INVOICES -->
+    <!-- ===================== -->
+
+    <changeSet id="create-invoices-table" author="disha">
+
+        <createTable tableName="invoices">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="clientId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lawyerId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="caseId" type="INT"/>
+
+            <column name="invoiceLink" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+    </changeSet>
+
+
+    <!-- ===================== -->
+    <!-- PAYMENTS -->
+    <!-- ===================== -->
+
+    <changeSet id="create-payments-table" author="disha">
+
+        <createTable tableName="payments">
+
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="caseId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="clientId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lawyerId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="totalAmount" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="paidAmount" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="paymentDate" type="DATETIME"/>
+
+            <column name="paymentMethod" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="invoiceId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="createdAt" type="DATETIME"/>
+            <column name="updatedAt" type="DATETIME"/>
+
+        </createTable>
+
+    </changeSet>
+
+
+</databaseChangeLog>
