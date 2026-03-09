@@ -65,13 +65,13 @@ ALGORITHM='HS256'
 
 bcrypt_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 
-oauth2_bearer=OAuth2PasswordBearer(tokenUrl='auth/token')
+oauth2_bearer=OAuth2PasswordBearer(tokenUrl='/auth/login')
 
 class UserVerification(BaseModel):
     password: str
     new_password: str = Field(min_length=6)
 
-user_dependency=Annotated[dict,Depends(c.get_current_user)]
+user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
 
 @router.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user:user_dependency,db:dp_dependency):

@@ -7,7 +7,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
-
+from config.db_config import dp_dependency
 from utils.db_helper import DBHelper
 
 # JWT Configuration
@@ -19,7 +19,7 @@ JWT_SECRET = os.getenv("JWT_SECRET")
 print(JWT_SECRET)
 ALGORITHM = "HS256"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 class TokenHelper:
@@ -31,7 +31,7 @@ class TokenHelper:
             to_encode, JWT_SECRET, algorithm=ALGORITHM)
         return encoded_jwt
     
-    def verify_token(token: str) -> UserModel:
+    def verify_token(token: str, db: dp_dependency) -> UserModel:
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
             user_id: int = payload.get("id")
@@ -44,13 +44,13 @@ class TokenHelper:
                 # return {"error":"404"}
             
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        user = DBHelper.get_user_by_id(user_id)
+        user = DBHelper.get_user_by_id(user_id,db)
         if user is None:
             return APIHelper.send_unauthorized_error(
                 errorMessageKey='translations.UNAUTHORIZED')
                 # return {"error":"404"}
 
-        return UserModel(**user._mapping)
+        return user
 
-    def get_current_user(token: str = Depends(oauth2_scheme)) -> UserModel:
-        return TokenHelper.verify_token(token)
+    def get_current_user(db: dp_dependency,token: str = Depends(oauth2_scheme)) -> UserModel:
+        return TokenHelper.verify_token(token,db)
