@@ -5,12 +5,15 @@ from datetime import datetime
 
 class UserModel(BaseModel):
     name: str
-    email: str
     first_name: str
     last_name: str
+    email: str
     password: str
+    phoneNumber:str
     role: str
-
+    companyId:int
+    isDeleted: Optional[bool] = False
+   
 
 class TokenModel(BaseModel):
     access_token: str

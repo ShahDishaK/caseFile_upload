@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 from dtos.auth_models import UserModel
 # from helper.validation_helper import ValidationHelper
 
@@ -12,3 +12,7 @@ from dtos.auth_models import UserModel
 #         ValidationHelper.is_valid_email)
 #     _password = validator("password", allow_reuse=True)(
 #         ValidationHelper.is_valid_email)
+
+class UserVerification(BaseModel):
+    password: str
+    new_password: str = Field(min_length=6)

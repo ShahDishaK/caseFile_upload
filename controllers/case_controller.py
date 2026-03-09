@@ -1,0 +1,73 @@
+# Importing libraries
+from typing import Optional
+from models.cases_table import Cases
+
+from fastapi import APIRouter, Depends
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from config.db_config import dp_dependency
+from typing_extensions import Annotated
+from fastapi import APIRouter,Depends,HTTPException,Path
+from starlette import status 
+from helper.token_helper import TokenHelper
+from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
+from pydantic import BaseModel, Field
+from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
+
+case=APIRouter(
+    prefix='/case',
+    tags=['case']
+)
+
+
+
+user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
+
+@case.post("/case", status_code=status.HTTP_201_CREATED)
+async def create_case(create_case_request: CreateCaseRequest,user:user_dependency,db:dp_dependency):
+    if user is None or user.role != 'lawyer':
+        raise HTTPException(status_code=401,detail='Authentication Failed')
+    create_case_model = Cases(
+        caseNumber=create_case_request.caseNumber,
+    title = create_case_request.title,
+    type=create_case_request.type,
+    description =create_case_request.description,
+    staffId=create_case_request.staffId,
+    status=create_case_request.status
+    )
+    db.add(create_case_model)
+    db.commit()
+
+@case.get("/",status_code=status.HTTP_200_OK)
+async def read_all(user:user_dependency,db:dp_dependency):
+    if user is None or user.role not in ['lawyer', 'staff']:
+        raise HTTPException(status_code=401,detail='Authentication Failed')
+    cases = db.query(Cases).all()
+    return cases
+
+
+@case.patch("/case/{case_id}", status_code=status.HTTP_200_OK)
+async def update_case(
+    case_id: int,
+    update_case_request: UpdateCaseRequest,
+    user: user_dependency,
+    db: dp_dependency
+):
+    if user is None or user.role not in ['lawyer', 'staff']:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+
+    case_model = db.query(Cases).filter(Cases.id == case_id).first()
+
+    if case_model is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    update_data = update_case_request.dict(exclude_unset=True, exclude_none=True)
+
+    for key, value in update_data.items():
+        setattr(case_model, key, value)
+
+    db.commit()
+    db.refresh(case_model)
+
+    return case_model

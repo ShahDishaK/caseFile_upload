@@ -11,9 +11,10 @@ load_dotenv(dotenv_path)
 
 # Importing libraries
 from fastapi import FastAPI, Request
-from routes.users import router
+from controllers.user_controller import router
+from controllers.case_controller import case
 from fastapi import APIRouter
-from routes.auth import auth
+from controllers.auth_controller import auth
 # from fastapi.exceptions import RequestValidationError
 # import i18n
 
@@ -48,5 +49,7 @@ Base.metadata.create_all(bind=engine)
 # Including the routes
 app.include_router(router)
 app.include_router(auth)
+app.include_router(case)
+
 
 

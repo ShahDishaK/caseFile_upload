@@ -33,19 +33,19 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-class Lawyers(Base):
-    __tablename__ = "lawyers"
+# class Lawyers(Base):
+#     __tablename__ = "lawyers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    specialization = Column(String(255), nullable=False)
-    caseId = Column(Integer, ForeignKey('cases.id'), nullable=True)
-    clientId = Column(Integer, ForeignKey('clients.id'), nullable=True)
-    sessionId =Column(Integer, ForeignKey('courtSessions.id'), nullable=True)
-    taskId = Column(Integer, ForeignKey('tasks.id'), nullable=True)
-    invoiceId=Column(Integer, ForeignKey('invoices.id'), nullable=True)
-    createdAt = Column(DateTime, default=datetime.utcnow)
-    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+#     id = Column(Integer, primary_key=True, index=True)
+#     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+#     specialization = Column(String(255), nullable=False)
+#     caseId = Column(Integer, ForeignKey('cases.id'), nullable=True)
+#     clientId = Column(Integer, ForeignKey('clients.id'), nullable=True)
+#     sessionId =Column(Integer, ForeignKey('courtSessions.id'), nullable=True)
+#     taskId = Column(Integer, ForeignKey('tasks.id'), nullable=True)
+#     invoiceId=Column(Integer, ForeignKey('invoices.id'), nullable=True)
+#     createdAt = Column(DateTime, default=datetime.utcnow)
+#     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Staff(Base):
     __tablename__ = "staff"
@@ -94,18 +94,18 @@ class Tasks(Base):
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-class Cases(Base):
-    __tablename__   ="cases"
+# class Cases(Base):
+#     __tablename__   ="cases"
 
-    id = Column(Integer, primary_key=True, index=True)
-    caseNumber = Column(Integer, nullable=False)
-    title = Column(String(255), nullable=False)
-    type=Column(String(40),nullable=False)
-    description = Column(String(255), nullable=False)
-    staffId=Column(Integer,ForeignKey('staff.id'), nullable=True)
-    status=Column(String(50), nullable=False)   
-    createdAt = Column(DateTime, default=datetime.utcnow)
-    updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+#     id = Column(Integer, primary_key=True, index=True)
+#     caseNumber = Column(Integer, nullable=False)
+#     title = Column(String(255), nullable=False)
+#     type=Column(String(40),nullable=False)
+#     description = Column(String(255), nullable=False)
+#     staffId=Column(Integer,ForeignKey('staff.id'), nullable=True)
+#     status=Column(String(50), nullable=False)   
+#     createdAt = Column(DateTime, default=datetime.utcnow)
+#     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class CourtSessions(Base):
     __tablename__="courtSessions"

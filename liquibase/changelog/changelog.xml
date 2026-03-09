@@ -430,6 +430,13 @@
         </createTable>
 
     </changeSet>
-
+<!-- Add isDeleted column to cases table -->
+    <changeSet id="add-isDeleted-column-cases" author="disha">
+    <addColumn tableName="cases">
+        <column name="isDeleted" type="BOOLEAN" defaultValueBoolean="false">
+            <constraints nullable="false"/>
+        </column>
+    </addColumn>
+</changeSet>
 
 </databaseChangeLog>
