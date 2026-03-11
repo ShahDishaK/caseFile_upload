@@ -112,6 +112,14 @@ async def read_all(user:user_dependency,db:dp_dependency):
     users = db.query(User).all()
     return users
 
+
+@router.get("/profile",status_code=status.HTTP_200_OK)
+async def get_user(user:user_dependency,db:dp_dependency):
+    if user is None:
+        raise HTTPException(status_code=401,detail='Authentication Failed')
+    user = db.query(User).filter(User.id == user.id).first()
+    return user
+
 @router.put("/change_password",status_code=status.HTTP_200_OK)
 async def change_password(user:user_dependency,db:dp_dependency,new_password:str,user_verification: UserVerification):
     if user is None:

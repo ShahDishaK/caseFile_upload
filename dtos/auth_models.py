@@ -11,6 +11,7 @@ class UserModel(BaseModel):
     password: str
     phoneNumber:str
     role: str
+    address: Optional[str] = None
     companyId:int
     isDeleted: Optional[bool] = False
    

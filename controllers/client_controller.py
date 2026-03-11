@@ -1,7 +1,7 @@
 # Importing libraries
 from typing import Optional
 from helper.api_helper import APIHelper
-from models.cases_table import Cases
+from models.clients_table import Clients
 from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -13,31 +13,30 @@ from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from pydantic import BaseModel, Field
-from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
+from dtos.client_models import ClientModel as CreateClientRequest, UpdateClientRequest
 
 case=APIRouter(
-    prefix='/case',
-    tags=['case']
+    prefix='/client',
+    tags=['client']
 )
 
 user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
 
-@case.post("/case", status_code=status.HTTP_201_CREATED)
-async def create_case(create_case_request: CreateCaseRequest,user:user_dependency,db:dp_dependency):
+@case.post("/client", status_code=status.HTTP_201_CREATED)
+async def create_client(create_client_request: CreateClientRequest,user:user_dependency,db:dp_dependency):
     if user is None or user.role != 'lawyer':
         return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-    create_case_model = Cases(
-        caseNumber=create_case_request.caseNumber,
-    title = create_case_request.title,
-    type=create_case_request.type,
-    description =create_case_request.description,
-    caseStage=create_case_request.caseStage,
-    caseCity=create_case_request.caseCity,
-    status=create_case_request.status,
-    caseClosedDate=create_case_request.caseClosedDate
+    create_client_model = Clients(
+        user_id=create_client_request.user_id,
+        crNumber=create_client_request.crNumber,
+        vatNumber=create_client_request.vatNumber,
+        vatPercentage=create_client_request.vatPercentage,
+        caseId=create_client_request.caseId,
+        documentId=create_client_request.documentId
     )
-    db.add(create_case_model)
+    db.add(create_client_model)
     db.commit()
+    
 def active_cases(db):
     return db.query(Cases).filter(Cases.isDeleted.is_(False))
 @case.get("/",status_code=status.HTTP_200_OK)

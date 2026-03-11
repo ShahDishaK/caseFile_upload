@@ -16,7 +16,6 @@ load_dotenv()
 
 # Initializing the Hashing alogorith
 JWT_SECRET = os.getenv("JWT_SECRET")
-print(JWT_SECRET)
 ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")

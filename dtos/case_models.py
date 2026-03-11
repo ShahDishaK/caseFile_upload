@@ -8,8 +8,10 @@ class CaseModel(BaseModel):
     title :str 
     type:str
     description : str
-    staffId:int
     status: str
+    caseClosedDate: Optional[datetime] = None
+    caseStage:str
+    caseCity:str
    
 class UpdateCaseRequest(BaseModel):
     caseNumber: Optional[int] = None
@@ -18,3 +20,4 @@ class UpdateCaseRequest(BaseModel):
     description: Optional[str] = None
     staffId: Optional[int] = None
     status: Optional[str] = None
+    caseCloseDate: Optional[datetime] = None

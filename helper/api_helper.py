@@ -25,3 +25,11 @@ class APIHelper:
     # Send error response with custom message
     def send_success_response(data: Optional[Any] = None, successMessageKey: Optional[str] = None, locale: Optional[str] = "en"):
         return BaseResponseModel(data=data, message=i18n.t(key=successMessageKey or 'translations.SUCCESS', locale=locale)).dict()
+    
+    #send not found error message
+    def send_not_found_error(errorMessageKey: Optional[str] = None, locale: Optional[str] = "en"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(BaseErrorModel(error=i18n.t(
+                key=errorMessageKey or 'translations.FAILURE', locale=locale))).dict()
+        )
