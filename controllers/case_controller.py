@@ -1,11 +1,12 @@
 # Importing libraries
 from typing import Optional
+from dtos.auth_models import UserModel
 from helper.api_helper import APIHelper
 from models.cases_table import Cases
 from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import dp_dependency
+from config.db_config import dp_dependency, get_db
 from typing_extensions import Annotated
 from fastapi import APIRouter,Depends,HTTPException,Path
 from starlette import status 
@@ -16,14 +17,14 @@ from pydantic import BaseModel, Field
 from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
 
 case=APIRouter(
-    prefix='/case',
-    tags=['case']
+    prefix='/cases',
+    tags=['cases']
 )
 
 user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
 
 @case.post("/case", status_code=status.HTTP_201_CREATED)
-async def create_case(create_case_request: CreateCaseRequest,user:user_dependency,db:dp_dependency):
+async def create_case(create_case_request: CreateCaseRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     if user is None or user.role != 'lawyer':
         return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
     create_case_model = Cases(
@@ -34,14 +35,17 @@ async def create_case(create_case_request: CreateCaseRequest,user:user_dependenc
     caseStage=create_case_request.caseStage,
     caseCity=create_case_request.caseCity,
     status=create_case_request.status,
-    caseClosedDate=create_case_request.caseClosedDate
+    caseClosedDate=create_case_request.caseClosedDate,
+    clientId=create_case_request.clientId
     )
     db.add(create_case_model)
     db.commit()
+
 def active_cases(db):
     return db.query(Cases).filter(Cases.isDeleted.is_(False))
+
 @case.get("/",status_code=status.HTTP_200_OK)
-async def read_all(user:user_dependency,db:dp_dependency):
+async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     if user is None or user.role not in ['lawyer', 'staff']:
         return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
     cases = active_cases(db).all()
@@ -49,7 +53,7 @@ async def read_all(user:user_dependency,db:dp_dependency):
 
 
 @case.patch("/case/{case_id}", status_code=status.HTTP_200_OK)
-async def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: user_dependency,db: dp_dependency):
+async def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     if user is None or user.role not in ['lawyer', 'staff']:
         return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
@@ -70,7 +74,7 @@ async def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: 
 
 
 @case.delete("/{case_id}", status_code=status.HTTP_200_OK)
-async def soft_delete_case(case_id: int, user: user_dependency, db: dp_dependency):
+async def soft_delete_case(case_id: int, user: UserModel = Depends(TokenHelper.get_current_user), db: Session = Depends(get_db)):
 
     if user is None or user.role != "lawyer":
         return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')

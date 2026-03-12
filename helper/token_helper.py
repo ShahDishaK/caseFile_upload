@@ -1,13 +1,15 @@
 # Importing libraries
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+
+from sqlalchemy.orm import Session
 from dtos.auth_models import UserModel
 from helper.api_helper import APIHelper
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
-from config.db_config import dp_dependency
+from config.db_config import dp_dependency, get_db
 from utils.db_helper import DBHelper
 
 # JWT Configuration
@@ -51,5 +53,5 @@ class TokenHelper:
 
         return user
 
-    def get_current_user(db: dp_dependency,token: str = Depends(oauth2_scheme)) -> UserModel:
+    def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db)) -> UserModel:
         return TokenHelper.verify_token(token,db)

@@ -3,13 +3,14 @@ from datetime import datetime
 from config.db_config import Base
 from datetime import datetime
 
-
-class Lawyers(Base):
-    __tablename__ = "lawyers"
+class Staff(Base):
+    __tablename__ = "staff"
 
     id = Column(Integer, primary_key=True, index=True)
-    userId = Column(Integer, ForeignKey('users.id'), nullable=False)
-    specialization = Column(String(255), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     caseId = Column(Integer, ForeignKey('cases.id'), nullable=True)
+    lawyerId= Column(Integer,ForeignKey('lawyers.id'), nullable=True)
+    taskId= Column(Integer,ForeignKey('tasks.id'),nullable=True)
+    isBlocked=Column(Boolean,default=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

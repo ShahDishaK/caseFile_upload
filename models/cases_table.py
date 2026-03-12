@@ -15,6 +15,7 @@ class Cases(Base):
     caseCity=Column(String(50), nullable=False)
     status=Column(String(50), nullable=False)   
     caseClosedDate=Column(DateTime, nullable=True,default=None)
+    clientId=Column(Integer, ForeignKey('clients.id'), nullable=True)
     isDeleted=Column(Boolean, default=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

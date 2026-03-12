@@ -1,9 +1,10 @@
+from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 from fastapi import Depends, APIRouter, HTTPException,Request 
 from pydantic import BaseModel
 from models.users_table import User
 from passlib.context import CryptContext
-from config.db_config import dp_dependency
+from config.db_config import dp_dependency, get_db
 from starlette import status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -20,7 +21,7 @@ bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 @auth.post("/register", status_code=status.HTTP_201_CREATED)
-async def create_user(create_user_request: CreateUserRequest, db: dp_dependency):
+async def create_user(create_user_request: CreateUserRequest, db: Session = Depends(get_db)):
     create_user_model = User(
         name=create_user_request.name,
        firstName=create_user_request.first_name,
@@ -37,10 +38,11 @@ async def create_user(create_user_request: CreateUserRequest, db: dp_dependency)
     db.commit()
 
 
-@auth.post("/login", response_model=TokenModel)
+
+@auth.post("/login")
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: dp_dependency
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
 ):
     user = ValidationHelper.authenticate_user(form_data.username, form_data.password, db)
     if not user:

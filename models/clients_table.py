@@ -7,11 +7,11 @@ class Clients(Base):
     __tablename__="clients"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     crNumber=Column(Integer, nullable=True)
     vatNumber=Column(Integer, nullable=True)
     vatPercentage=Column(Integer, nullable=True)
-    caseId = Column(Integer, ForeignKey('cases.id'), nullable=True)
-    documentId = Column(Integer, ForeignKey('documents.id'), nullable=True)
+    isBlocked=Column(Boolean,default=False)
+    isDeleted=Column(Boolean,default=False)
+    lawyerId = Column(Integer, ForeignKey('documents.id'), nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

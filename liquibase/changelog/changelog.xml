@@ -378,5 +378,174 @@
 
 </changeSet>
 
+<!-- Add isBlocked column in  Clients-->
+<changeSet id="6-add-isBlocked-to-clients" author="disha">
+
+    <addColumn tableName="clients">
+
+        <column name="isBlocked" type="BOOLEAN" defaultValueBoolean="false">
+            <constraints nullable="false"/>
+        </column>
+
+    </addColumn>
+
+</changeSet>
+
+<!-- Add isDeleted column in  Clients-->
+<changeSet id="6-add-isDeleted-to-clients" author="disha">
+
+    <addColumn tableName="clients">
+
+        <column name="isDeleted" type="BOOLEAN" defaultValueBoolean="false">
+            <constraints nullable="false"/>
+        </column>
+
+    </addColumn>
+
+</changeSet>
+
+<!-- Add clientId column in Cases -->
+<changeSet id="3-add-clientId-to-cases" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="cases" columnName="clientId"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="cases">
+        <column name="clientId" type="INT" >
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+    <addForeignKeyConstraint
+        baseTableName="cases"
+        baseColumnNames="clientId"
+        referencedTableName="clients"
+        referencedColumnNames="id"
+        constraintName="fk_cases_client"/>
+</changeSet>
+
+<!-- Drop caseId from client -->
+<changeSet id="8-drop-caseId-from-clients" author="disha">
+
+    <!-- Drop foreign key constraint -->
+    <dropForeignKeyConstraint 
+        baseTableName="clients"
+        constraintName="fk_clients_case"/>
+
+    <!-- Drop the column -->
+    <dropColumn 
+        tableName="clients"
+        columnName="caseId"/>
+
+</changeSet>
+
+<!-- Add description column in Documents -->
+<changeSet id="8-add-description-to-documents" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="documents" columnName="description"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="documents">
+        <column name="description" type="VARCHAR(255)"/>
+    </addColumn>
+</changeSet>
+
+<!-- Add notes column in Documents -->
+<changeSet id="8-add-notes-to-documents" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="documents" columnName="notes"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="documents">
+        <column name="notes" type="VARCHAR(255)"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="10-add-clientId-to-documents" author="disha">
+    
+    <!-- Precondition to avoid duplicate column errors -->
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="documents" columnName="clientId"/>
+        </not>
+    </preConditions>
+
+    <!-- Add the column -->
+    <addColumn tableName="documents">
+        <column name="clientId" type="INT">
+            <constraints nullable="true"/> <!-- nullable true to prevent issues with existing data -->
+        </column>
+    </addColumn>
+
+    <!-- Add the foreign key -->
+    <addForeignKeyConstraint
+        baseTableName="documents"
+        baseColumnNames="clientId"
+        referencedTableName="clients"
+        referencedColumnNames="id"
+        constraintName="fk_documents_client"/>
+</changeSet>
+
+
+<changeSet id="9-drop-example" author="disha">
+
+    <dropTable tableName="example"/>
+
+</changeSet>
+
+<changeSet id="10-create-staff-table" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="staff"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="staff">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+
+        <column name="user_id" type="INT">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="taskId" type="INT"/>
+
+        <column name="isBlocked" type="BOOLEAN" defaultValueBoolean="false"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+</changeSet>
+
+<changeSet id="7-modify-courtSessions-session-columns" author="disha">
+
+    <!-- Change datatype of sessionDate -->
+    <modifyDataType 
+        tableName="courtSessions"
+        columnName="sessionDate"
+        newDataType="DATE"/>
+
+    <!-- Add sessionTime column -->
+    <addColumn tableName="courtSessions">
+        <column name="sessionTime" type="TIME"/>
+    </addColumn>
+
+</changeSet>
 
 </databaseChangeLog>

@@ -66,8 +66,9 @@ from fastapi import APIRouter, Depends
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import dp_dependency
-from dtos.user_models import UserVerification
+from config.db_config import dp_dependency, get_db
+from dtos.user_models import UserVerification,ForgotPassword
+from dtos.auth_models import UserModel
 from models.users_table import User
 
 # @user.post("/users/")
@@ -106,7 +107,7 @@ oauth2_bearer=OAuth2PasswordBearer(tokenUrl='/auth/login')
 user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
 
 @router.get("/",status_code=status.HTTP_200_OK)
-async def read_all(user:user_dependency,db:dp_dependency):
+async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     if user is None or user.role != 'admin':
         raise HTTPException(status_code=401,detail='Authentication Failed')
     users = db.query(User).all()
@@ -114,20 +115,37 @@ async def read_all(user:user_dependency,db:dp_dependency):
 
 
 @router.get("/profile",status_code=status.HTTP_200_OK)
-async def get_user(user:user_dependency,db:dp_dependency):
+async def get_user(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=401,detail='Authentication Failed')
     user = db.query(User).filter(User.id == user.id).first()
     return user
 
 @router.put("/change_password",status_code=status.HTTP_200_OK)
-async def change_password(user:user_dependency,db:dp_dependency,new_password:str,user_verification: UserVerification):
+async def change_password(user_verification: UserVerification,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
     user_model = db.query(User).filter(User.id == user.id).first()
 
-    if not bcrypt_context.verify(user_verification.password, user_model.hashed_password):
+    if not bcrypt_context.verify(user_verification.password, user_model.password):
         raise HTTPException(status_code=401, detail='Error on password change')
-    user_model.hashed_password = bcrypt_context.hash(user_verification.new_password)
+    user_model.password = bcrypt_context.hash(user_verification.new_password)
     db.add(user_model)
     db.commit()
+
+
+@router.put("/forgot_password", status_code=status.HTTP_200_OK)
+async def forgot_password(user_verification: ForgotPassword, db: Session = Depends(get_db)):
+    
+    user_model = db.query(User).filter(User.email == user_verification.email).first()
+
+    # Check if the email matches
+    if user_model is None:
+        raise HTTPException(status_code=404, detail='User not found')
+    # Update password
+    user_model.password = bcrypt_context.hash(user_verification.new_password)
+    db.add(user_model)
+    db.commit()
+
+    return {"message": "Password changed successfully"}
+
