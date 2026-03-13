@@ -15,33 +15,27 @@ from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from pydantic import BaseModel, Field
 from dtos.courtsession_models import SessionModel as CreatSessionRequest
 
-session=APIRouter(
-    prefix='/sessions',
-    tags=['session']
-)
 
 
 
-user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
+class CourtSessionController:
 
-@session.post("/session", status_code=status.HTTP_201_CREATED)
-async def create_document(create_session_request: CreatSessionRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role !='lawyer':
-        raise HTTPException(status_code=401,detail='Authentication Failed')
-    create_session_model = CourtSessions(
-        sessionDate=create_session_request.sessionDate,
-        sessionTime=create_session_request.sessionTime,
-        courtName=create_session_request.courtName,
-        caseId=create_session_request.caseId,
-        lawyerId=create_session_request.lawyerId,
-        clientId=create_session_request.clientId,
-    )
-    db.add(create_session_model)
-    db.commit()
+    def create_document(create_session_request: CreatSessionRequest,user: UserModel,db: Session ):
+        if user is None or user.role !='lawyer':
+            raise HTTPException(status_code=401,detail='Authentication Failed')
+        create_session_model = CourtSessions(
+            sessionDate=create_session_request.sessionDate,
+            sessionTime=create_session_request.sessionTime,
+            courtName=create_session_request.courtName,
+            caseId=create_session_request.caseId,
+            lawyerId=create_session_request.lawyerId,
+            clientId=create_session_request.clientId,
+        )
+        db.add(create_session_model)
+        db.commit()
 
-@session.get("/",status_code=status.HTTP_200_OK)
-async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role !='lawyer':
-        raise HTTPException(status_code=401,detail='Authentication Failed')
-    sessions = db.query(CourtSessions).all()
-    return sessions
+    def read_all(user: UserModel ,db: Session ):
+        if user is None or user.role !='lawyer':
+            raise HTTPException(status_code=401,detail='Authentication Failed')
+        sessions = db.query(CourtSessions).all()
+        return sessions

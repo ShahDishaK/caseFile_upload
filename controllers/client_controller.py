@@ -17,93 +17,84 @@ from pydantic import BaseModel, Field
 from models.lawyers_table import Lawyers
 from dtos.client_models import ClientModel as CreateClientRequest, UpdateClientRequest
 
-client=APIRouter(
-    prefix='/clients',
-    tags=['clients']
-)
-
-user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
-
-@client.post("/client", status_code=status.HTTP_201_CREATED)
-async def create_client(create_client_request: CreateClientRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role != 'lawyer':
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-    
-    # Get lawyer using logged-in user's id
-    lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-
-    if lawyer is None:
-        return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-
-    
-    create_client_model = Clients(
-        crNumber=create_client_request.crNumber,
-        vatNumber=create_client_request.vatNumber,
-        vatPercentage=create_client_request.vatPercentage,
-        lawyerId=lawyer.id,
-        isDeleted=create_client_request.isDeleted,
-        isBlocked=create_client_request.isBlocked
-    )
-    db.add(create_client_model)
-    db.commit()
-    
-def active_clients(db):
-    return db.query(Clients).filter(Clients.isDeleted.is_(False),Clients.isBlocked.is_(False))
 
 
-@client.get("/",status_code=status.HTTP_200_OK)
-async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role not in ['lawyer', 'staff']:
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-    cases = active_clients(db).all()
-    return cases
+class ClientController:
+
+    def create_client(create_client_request: CreateClientRequest,user: UserModel ,db: Session ):
+        if user is None or user.role != 'lawyer':
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        
+        # Get lawyer using logged-in user's id
+        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+
+        if lawyer is None:
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+
+        
+        create_client_model = Clients(
+            crNumber=create_client_request.crNumber,
+            vatNumber=create_client_request.vatNumber,
+            vatPercentage=create_client_request.vatPercentage,
+            lawyerId=lawyer.id,
+            isDeleted=create_client_request.isDeleted,
+            isBlocked=create_client_request.isBlocked
+        )
+        db.add(create_client_model)
+        db.commit()
+  
+    def active_clients(db):
+        return db.query(Clients).filter(Clients.isDeleted.is_(False),Clients.isBlocked.is_(False))
 
 
-@client.patch("/client/{client_id}", status_code=status.HTTP_200_OK)
-async def update_client(client_id: int,update_client_request: UpdateClientRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role !='lawyer':
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+    def read_all(user: UserModel ,db: Session ):
+        if user is None or user.role not in ['lawyer', 'staff']:
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        cases = ClientController.active_clients(db).all()
+        return cases
 
-    case_model = db.query(Clients).filter(Clients.id == client_id).first()
+    def update_client(client_id: int,update_client_request: UpdateClientRequest,user: UserModel,db: Session):
+        if user is None or user.role !='lawyer':
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    if case_model is None:
-        return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
+        case_model = db.query(Clients).filter(Clients.id == client_id).first()
 
-    update_data = update_client_request.dict(exclude_unset=True, exclude_none=True)
+        if case_model is None:
+            return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    for key, value in update_data.items():
-        setattr(case_model, key, value)
-    
-    db.commit()
-    db.refresh(case_model)
+        update_data = update_client_request.dict(exclude_unset=True, exclude_none=True)
 
-    return case_model
+        for key, value in update_data.items():
+            setattr(case_model, key, value)
+        
+        db.commit()
+        db.refresh(case_model)
+
+        return case_model
 
 
-@client.delete("/{client_id}", status_code=status.HTTP_200_OK)
-async def soft_delete_client(client_id: int, user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    def soft_delete_client(client_id: int, user: UserModel,db: Session ):
 
-    if user is None or user.role != "lawyer":
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user is None or user.role != "lawyer":
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    db.query(Clients).filter(Clients.id == client_id).update(
-        {"isDeleted": True}
-    )
+        db.query(Clients).filter(Clients.id == client_id).update(
+            {"isDeleted": True}
+        )
 
-    db.commit()
+        db.commit()
 
-    return {"message": "Client soft deleted successfully"}
+        return {"message": "Client soft deleted successfully"}
 
-@client.put("/client/{client_id}/block", status_code=status.HTTP_200_OK)
-async def block_client(client_id: int, user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    def block_client(client_id: int, user: UserModel,db: Session):
 
-    if user is None or user.role != "lawyer":
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user is None or user.role != "lawyer":
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    db.query(Clients).filter(Clients.id == client_id).update(
-        {"isBlocked": True}
-    )
+        db.query(Clients).filter(Clients.id == client_id).update(
+            {"isBlocked": True}
+        )
 
-    db.commit()
+        db.commit()
 
-    return {"message": "Client blocked successfully"}
+        return {"message": "Client blocked successfully"}

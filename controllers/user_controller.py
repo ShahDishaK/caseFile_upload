@@ -1,84 +1,12 @@
-# # Importing libraries
-# from dtos.auth_models import UserModel
-# from dtos.base_response_model import BaseResponseModel
-# from dtos.user_models import CreateUserModel
-# from helper.api_helper import APIHelper
-# from config.db_config import engine
-# from helper.hashing import Hash
-# from models.users_table import users_table
-
-
-# class UserController:
-#     def create_user(request: CreateUserModel) -> BaseResponseModel:
-#         with engine.connect() as db:
-#             password = Hash.get_hash(request.password)
-#             new_user = db.execute(users_table.insert().values(
-#                 email=request.email, password=password, is_admin=request.is_admin).returning(*users_table.c)).fetchone()
-#         return APIHelper.send_success_response(data=UserModel(**new_user._mapping), successMessageKey='translations.USER_CREATED')
-
-#     def delete_user(user_id: int) -> BaseResponseModel:
-#         with engine.connect() as db:
-#             db.execute(users_table.delete().where(users_table.c.id == id))
-#         return APIHelper.send_success_response(successMessageKey='translations.USER_DELETED')
-
-#     def get_users(page: int, size: int) -> BaseResponseModel:
-#         with engine.connect() as db:
-#             users = db.execute(users_table.select().offset(
-#                 (page - 1) * size).limit(size)).fetchall()
-#         user_list = list(map(lambda user: UserModel(**user._mapping), users))
-#         return APIHelper.send_success_response(data=user_list, successMessageKey='translations.SUCCESS')
-
-
 # Importing libraries
 from typing import Optional
 from fastapi import APIRouter, Depends
-# from config.constants import Constants
-# from controllers.user_controller import UserController
-# from dtos.user_models import CreateUserModel
-# from helper.api_helper import APIHelper
-# from helper.token_helper import TokenHelper
-
-# Declaring router
-# user = APIRouter(tags=['User'])
-
-# Login API
-
-
-# @user.post('/user')
-# async def create_user(request: CreateUserModel = Depends(TokenHelper.get_current_user)):
-#     return UserController.create_user(request)
-
-
-# @user.get('/user')
-# async def get_user(user: str = Depends(TokenHelper.get_current_user)):
-#     return APIHelper.send_success_response(data=user, successMessageKey='translations.SUCCESS')
-
-
-# @user.delete('/user/{user_id}')
-# async def delete_user(user_id: int, _: str = Depends(TokenHelper.get_current_user)):
-#     return UserController.delete_user(user_id)
-
-
-# @user.get('/users')
-# async def get_users(page: int, size: Optional[int] = Constants.PAGE_SIZE, _: str = Depends(TokenHelper.get_current_user)):
-#     return UserController.get_users(page, size)
-
-
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from config.db_config import dp_dependency, get_db
 from dtos.user_models import UserVerification,ForgotPassword
 from dtos.auth_models import UserModel
 from models.users_table import User
-
-# @user.post("/users/")
-# def create_user(username: str, email: str, db: Session = Depends(get_db)):
-#     user = User(name=username, email=email)
-#     db.add(user)
-#     db.commit()
-#     db.refresh(user)
-#     return user
-
 from typing_extensions import Annotated
 from fastapi import APIRouter,Depends,HTTPException,Path
 from starlette import status 
@@ -86,6 +14,7 @@ from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from pydantic import BaseModel, Field
+
 
 router=APIRouter(
     prefix='/users',
@@ -100,52 +29,43 @@ bcrypt_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
 
 oauth2_bearer=OAuth2PasswordBearer(tokenUrl='/auth/login')
 
-# class UserVerification(BaseModel):
-#     password: str
-#     new_password: str = Field(min_length=6)
-
-user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
-
-@router.get("/",status_code=status.HTTP_200_OK)
-async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role != 'admin':
-        raise HTTPException(status_code=401,detail='Authentication Failed')
-    users = db.query(User).all()
-    return users
+class UserController:
+    def read_all(user: UserModel ,db: Session ):
+        if user is None or user.role != 'admin':
+            raise HTTPException(status_code=401,detail='Authentication Failed')
+        users = db.query(User).all()
+        return users
 
 
-@router.get("/profile",status_code=status.HTTP_200_OK)
-async def get_user(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None:
-        raise HTTPException(status_code=401,detail='Authentication Failed')
-    user = db.query(User).filter(User.id == user.id).first()
-    return user
+    def get_user(user: UserModel,db: Session):
+        if user is None:
+            raise HTTPException(status_code=401,detail='Authentication Failed')
+        user = db.query(User).filter(User.id == user.id).first()
+        return user
 
-@router.put("/change_password",status_code=status.HTTP_200_OK)
-async def change_password(user_verification: UserVerification,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None:
-        raise HTTPException(status_code=401, detail='Authentication Failed')
-    user_model = db.query(User).filter(User.id == user.id).first()
+    def change_password(user_verification: UserVerification,user: UserModel,db: Session ):
+        if user is None:
+            raise HTTPException(status_code=401, detail='Authentication Failed')
+        user_model = db.query(User).filter(User.id == user.id).first()
 
-    if not bcrypt_context.verify(user_verification.password, user_model.password):
-        raise HTTPException(status_code=401, detail='Error on password change')
-    user_model.password = bcrypt_context.hash(user_verification.new_password)
-    db.add(user_model)
-    db.commit()
+        if not bcrypt_context.verify(user_verification.password, user_model.password):
+            raise HTTPException(status_code=401, detail='Error on password change')
+        user_model.password = bcrypt_context.hash(user_verification.new_password)
+        db.add(user_model)
+        db.commit()
 
 
-@router.put("/forgot_password", status_code=status.HTTP_200_OK)
-async def forgot_password(user_verification: ForgotPassword, db: Session = Depends(get_db)):
-    
-    user_model = db.query(User).filter(User.email == user_verification.email).first()
+    def forgot_password(user_verification: ForgotPassword, db: Session):
+        
+        user_model = db.query(User).filter(User.email == user_verification.email).first()
 
-    # Check if the email matches
-    if user_model is None:
-        raise HTTPException(status_code=404, detail='User not found')
-    # Update password
-    user_model.password = bcrypt_context.hash(user_verification.new_password)
-    db.add(user_model)
-    db.commit()
+        # Check if the email matches
+        if user_model is None:
+            raise HTTPException(status_code=404, detail='User not found')
+        # Update password
+        user_model.password = bcrypt_context.hash(user_verification.new_password)
+        db.add(user_model)
+        db.commit()
 
-    return {"message": "Password changed successfully"}
+        return {"message": "Password changed successfully"}
 

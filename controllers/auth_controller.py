@@ -16,36 +16,35 @@ from dtos.auth_models import TokenModel
 from helper.validation_helper import ValidationHelper
 import os  
 
-auth= APIRouter(prefix='/auth',tags=['Auth'])
+# auth= APIRouter(prefix='/auth',tags=['Auth'])
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-@auth.post("/register", status_code=status.HTTP_201_CREATED)
-async def create_user(create_user_request: CreateUserRequest, db: Session = Depends(get_db)):
-    create_user_model = User(
-        name=create_user_request.name,
-       firstName=create_user_request.first_name,
-       lastName=create_user_request.last_name,
-        email=create_user_request.email,
-        password=bcrypt_context.hash(create_user_request.password),
-        phoneNumber=create_user_request.phoneNumber,
-        role=create_user_request.role,
-        address=create_user_request.address,
-        companyId=create_user_request.companyId,
-        isDeleted=create_user_request.isDeleted
-    )
-    db.add(create_user_model)
-    db.commit()
+class AuthController:
+    def create_user(create_user_request: CreateUserRequest, db: Session ):
+        create_user_model = User(
+            name=create_user_request.name,
+        firstName=create_user_request.first_name,
+        lastName=create_user_request.last_name,
+            email=create_user_request.email,
+            password=bcrypt_context.hash(create_user_request.password),
+            phoneNumber=create_user_request.phoneNumber,
+            role=create_user_request.role,
+            address=create_user_request.address,
+            companyId=create_user_request.companyId,
+            isDeleted=create_user_request.isDeleted
+        )
+        db.add(create_user_model)
+        db.commit()
 
 
 
-@auth.post("/login")
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    user = ValidationHelper.authenticate_user(form_data.username, form_data.password, db)
-    if not user:
-        APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-    token = TokenHelper.create_access_token({'sub':user.name,'id': user.id, 'role':user.role})
-    return {'access_token': token, 'token_type': 'bearer'}
+    def login_for_access_token(
+        form_data: OAuth2PasswordRequestForm ,
+        db: Session
+    ):
+        user = ValidationHelper.authenticate_user(form_data.username, form_data.password, db)
+        if not user:
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        token = TokenHelper.create_access_token({'sub':user.name,'id': user.id, 'role':user.role})
+        return {'access_token': token, 'token_type': 'bearer'}

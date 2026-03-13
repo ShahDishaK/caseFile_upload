@@ -5,17 +5,14 @@ from helper.cors_helper import CORSHelper
 from fastapi import FastAPI, Request
 from controllers.user_controller import router
 from controllers.case_controller import case
-from controllers.client_controller import client
-from controllers.task_controller import task
-from controllers.staff_controller import staff
-from controllers.courtSession_controller import session
-
-
-
-
-from controllers.document_controller import document
+from routes.clients import client
+from routes.tasks import task
+from routes.staff import staff
+from routes.courtSessions import session
+from routes.companies import company
+from routes.documents import document
 from fastapi import APIRouter
-from controllers.auth_controller import auth
+from routes.auth import auth
 from config.db_config import engine
 from models.users_table import Base
 
@@ -34,6 +31,8 @@ app.include_router(client)
 app.include_router(task)
 app.include_router(staff)
 app.include_router(session)
+app.include_router(company)
+
 
 
 

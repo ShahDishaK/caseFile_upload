@@ -21,68 +21,63 @@ case=APIRouter(
     tags=['cases']
 )
 
-user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
+class CaseController:
+    def create_case(create_case_request: CreateCaseRequest,user: UserModel,db: Session):
+        if user is None or user.role != 'lawyer':
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        create_case_model = Cases(
+            caseNumber=create_case_request.caseNumber,
+        title = create_case_request.title,
+        type=create_case_request.type,
+        description =create_case_request.description,
+        caseStage=create_case_request.caseStage,
+        caseCity=create_case_request.caseCity,
+        status=create_case_request.status,
+        caseClosedDate=create_case_request.caseClosedDate,
+        clientId=create_case_request.clientId
+        )
+        db.add(create_case_model)
+        db.commit()
 
-@case.post("/case", status_code=status.HTTP_201_CREATED)
-async def create_case(create_case_request: CreateCaseRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role != 'lawyer':
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-    create_case_model = Cases(
-        caseNumber=create_case_request.caseNumber,
-    title = create_case_request.title,
-    type=create_case_request.type,
-    description =create_case_request.description,
-    caseStage=create_case_request.caseStage,
-    caseCity=create_case_request.caseCity,
-    status=create_case_request.status,
-    caseClosedDate=create_case_request.caseClosedDate,
-    clientId=create_case_request.clientId
-    )
-    db.add(create_case_model)
-    db.commit()
+    def active_cases(db):
+        return db.query(Cases).filter(Cases.isDeleted.is_(False))
 
-def active_cases(db):
-    return db.query(Cases).filter(Cases.isDeleted.is_(False))
-
-@case.get("/",status_code=status.HTTP_200_OK)
-async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role not in ['lawyer', 'staff']:
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-    cases = active_cases(db).all()
-    return cases
+    def read_all(user: UserModel,db: Session ):
+        if user is None or user.role not in ['lawyer', 'staff']:
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        cases = CaseController.active_cases(db).all()
+        return cases
 
 
-@case.patch("/case/{case_id}", status_code=status.HTTP_200_OK)
-async def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    if user is None or user.role not in ['lawyer', 'staff']:
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+    def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: UserModel,db: Session ):
+        if user is None or user.role not in ['lawyer', 'staff']:
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    case_model = db.query(Cases).filter(Cases.id == case_id).first()
+        case_model = db.query(Cases).filter(Cases.id == case_id).first()
 
-    if case_model is None:
-        return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
+        if case_model is None:
+            return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    update_data = update_case_request.dict(exclude_unset=True, exclude_none=True)
+        update_data = update_case_request.dict(exclude_unset=True, exclude_none=True)
 
-    for key, value in update_data.items():
-        setattr(case_model, key, value)
-    
-    db.commit()
-    db.refresh(case_model)
+        for key, value in update_data.items():
+            setattr(case_model, key, value)
+        
+        db.commit()
+        db.refresh(case_model)
 
-    return case_model
+        return case_model
 
 
-@case.delete("/{case_id}", status_code=status.HTTP_200_OK)
-async def soft_delete_case(case_id: int, user: UserModel = Depends(TokenHelper.get_current_user), db: Session = Depends(get_db)):
+    def soft_delete_case(case_id: int, user: UserModel, db: Session):
 
-    if user is None or user.role != "lawyer":
-        return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user is None or user.role != "lawyer":
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-    db.query(Cases).filter(Cases.id == case_id).update(
-        {"isDeleted": True}
-    )
+        db.query(Cases).filter(Cases.id == case_id).update(
+            {"isDeleted": True}
+        )
 
-    db.commit()
+        db.commit()
 
-    return {"message": "Case soft deleted successfully"}
+        return {"message": "Case soft deleted successfully"}

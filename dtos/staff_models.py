@@ -13,8 +13,8 @@ class StaffModel(BaseModel):
    
 
 class UpdateStaffRequest(BaseModel):
-    user_id :int
-    caseId :int
-    lawyerId:int
-    taskId:int
+    user_id :Optional[int]=None
+    caseId :Optional[int]=None
+    lawyerId:Optional[int]=None
+    taskId:Optional[int]=None
     isBlocked:Optional[bool]=False
