@@ -547,5 +547,198 @@
     </addColumn>
 
 </changeSet>
+<!-- Add isBlocked column in Lawyers -->
+<changeSet id="4-add-isBlocked-to-lawyers" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="lawyers" columnName="isBlocked"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="lawyers">
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="4-make-specialization-nullable" author="disha">
+
+    <dropNotNullConstraint
+            tableName="lawyers"
+            columnName="specialization"
+            columnDataType="VARCHAR(255)"/>
+
+</changeSet>
+
+<changeSet id="11-create-caseStatusHistories" author="disha">
+
+    <createTable tableName="caseStatusHistories">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="caseId" type="INT" />
+        <column name="oldStatus" type="VARCHAR(15)" />
+
+        <column name="newStatus" type="VARCHAR(15)" />
+
+         <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        
+    </createTable>
+    <addForeignKeyConstraint
+            baseTableName="caseStatusHistories"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_casehistories_caseid"/>
+
+</changeSet>
+
+
+
+<!-- BLOCK STAFF TABLE -->
+<changeSet id="12-create-blockedStaff" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="blockedStaff"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="blockedStaff">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="staffId" type="INT"/>
+
+        <column name="lawyerId" type="VARCHAR(15)"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedStaff"
+            baseColumnNames="staffId"
+            referencedTableName="staff"
+            referencedColumnNames="id"
+            constraintName="fk_blockstaff_staffId"/>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedStaff"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_blockstaff_lawyerId"/>
+
+</changeSet>
+
+
+
+<!-- BLOCK LAWYERS TABLE -->
+<changeSet id="13-create-blockedLawyers" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="blockedLawyers"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="blockedLawyers">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="lawyerId" type="VARCHAR(15)"/>
+
+        <column name="adminUserId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedLawyers"
+            baseColumnNames="adminUserId"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_blockLawyer_adminId"/>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedLawyers"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_blocklawyer_lawyerId"/>
+
+</changeSet>
+
+
+
+<!-- BLOCK CLIENTS TABLE -->
+<changeSet id="14-create-blockedClients" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="blockedClients"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="blockedClients">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="clientId" type="INT"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedClients"
+            baseColumnNames="clientId"
+            referencedTableName="clients"
+            referencedColumnNames="id"
+            constraintName="fk_blockclient_clientId"/>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedClients"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_blockedclient_lawyerId"/>
+
+</changeSet>
+<changeSet id="15-fix-lawyerId-type-blockedTables" author="disha">
+
+    <modifyDataType 
+        tableName="blockedStaff"
+        columnName="lawyerId"
+        newDataType="INT"/>
+
+    <modifyDataType 
+        tableName="blockedLawyers"
+        columnName="lawyerId"
+        newDataType="INT"/>
+
+  
+
+</changeSet>
 
 </databaseChangeLog>

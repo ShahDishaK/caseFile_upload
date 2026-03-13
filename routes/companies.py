@@ -14,7 +14,7 @@ company = APIRouter(
 )
 
 
-@company.post("/", status_code=status.HTTP_201_CREATED)
+@company.post("/company", status_code=status.HTTP_201_CREATED)
 async def create_company(
     request: CompanyModel,
     user: UserModel = Depends(TokenHelper.get_current_user),
@@ -31,7 +31,7 @@ async def read_all(
     return CompanyController.read_all(user, db)
 
 
-@company.patch("/{company_id}", status_code=status.HTTP_200_OK)
+@company.patch("/company/{company_id}", status_code=status.HTTP_200_OK)
 async def update_company(
     company_id: int,
     request: UpdateCompanyRequest,

@@ -17,4 +17,4 @@ class UpdateStaffRequest(BaseModel):
     caseId :Optional[int]=None
     lawyerId:Optional[int]=None
     taskId:Optional[int]=None
-    isBlocked:Optional[bool]=False
+    isBlocked:Optional[bool]=None

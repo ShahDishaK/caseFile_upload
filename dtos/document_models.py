@@ -10,7 +10,6 @@ class DocumentModel(BaseModel):
     description: Optional[str] = None
     notes: Optional[str] = None
     caseId :int
-    userId : Optional[int] = None
     clientId : Optional[int] = None
 
 

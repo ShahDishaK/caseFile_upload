@@ -2,7 +2,7 @@
 from typing import Optional
 from dtos.auth_models import UserModel
 from helper.api_helper import APIHelper
-from models.cases_table import Cases
+# from models.cases_table import Cases
 from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -14,10 +14,10 @@ from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from pydantic import BaseModel, Field
-from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
+from dtos.caseStatusHistory_models import CaseStatusHistoryModel as CreateCaseRequest, UpdateCaseStatusHistoryRequest
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from models.cases_table import Cases, CaseStatus
+from models.caseStatusHistory_table import CaseStatusHistories
 from sqlalchemy import func
 
 
@@ -26,22 +26,22 @@ class CaseController:
     def create_case(create_case_request: CreateCaseRequest,user: UserModel,db: Session):
         if user is None or user.role != 'lawyer':
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        create_case_model = Cases(
-            caseNumber=create_case_request.caseNumber,
-        title = create_case_request.title,
-        type=create_case_request.type,
-        description =create_case_request.description,
-        caseStage=create_case_request.caseStage,
-        caseCity=create_case_request.caseCity,
-        status=create_case_request.status,
-        caseClosedDate=create_case_request.caseClosedDate,
-        clientId=create_case_request.clientId
+        create_case_model = CaseStatusHistories(
+            caseId=create_case_request.caseId,
+            title = create_case_request.title,
+            type=create_case_request.type,
+            description =create_case_request.description,
+            caseStage=create_case_request.caseStage,
+            caseCity=create_case_request.caseCity,
+            status=create_case_request.status,
+            caseClosedDate=create_case_request.caseClosedDate,
+            clientId=create_case_request.clientId
         )
         db.add(create_case_model)
         db.commit()
 
     def active_cases(db):
-        return db.query(Cases).filter(Cases.isDeleted.is_(False))
+        return db.query(CaseStatusHistories).filter(CaseStatusHistories.isDeleted.is_(False))
 
     def read_all(user: UserModel,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
@@ -50,11 +50,11 @@ class CaseController:
         return cases
 
 
-    def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: UserModel,db: Session ):
+    def update_case(case_id: int,update_case_request: UpdateCaseStatusHistoryRequest,user: UserModel,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-        case_model = db.query(Cases).filter(Cases.id == case_id).first()
+        case_model = db.query(CaseStatusHistories).filter(CaseStatusHistories.id == case_id).first()
 
         if case_model is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
@@ -70,16 +70,14 @@ class CaseController:
         return case_model
 
 
-    def soft_delete_case(case_id: int, user: UserModel, db: Session):
+    def delete_case(case_id: int, user: UserModel, db: Session):
 
         if user is None or user.role != "lawyer":
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-        db.query(Cases).filter(Cases.id == case_id).update(
-            {"isDeleted": True}
-        )
-
+        cases=db.query(CaseStatusHistories).filter(CaseStatusHistories.id == case_id)
+        db.delete(cases)
         db.commit()
 
-        return {"message": "Case soft deleted successfully"}
+        return {"message": "CaseHistory deleted successfully"}
     

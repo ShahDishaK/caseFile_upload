@@ -23,7 +23,7 @@ class User(Base):
     role = Column(SQLEnum(UserRole), nullable=True)
     companyId =  Column(Integer, ForeignKey('companies.id'),nullable=True)
     isDeleted=Column(Boolean,default=False)
-    isblocked=Column(Boolean,default=False)
+    isBlocked=Column(Boolean,default=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

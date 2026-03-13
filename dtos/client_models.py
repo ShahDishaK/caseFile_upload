@@ -15,5 +15,5 @@ class UpdateClientRequest(BaseModel):
     vatNumber:Optional[int]=None
     vatPercentage:Optional[int]=None
     lawyerId :Optional[int]=None
-    isDeleted: Optional[bool] = False
-    isBlocked: Optional[bool] = False
+    isDeleted: Optional[bool] = None
+    isBlocked: Optional[bool] = None

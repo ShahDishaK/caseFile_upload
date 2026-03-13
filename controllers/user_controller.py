@@ -16,12 +16,6 @@ from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from pydantic import BaseModel, Field
 
 
-router=APIRouter(
-    prefix='/users',
-    tags=['users']
-)
-
-
 SECREAT_KEY='342e33d140d858d4eb74ae725b7d3a0fe4aa8dade3f6f435fae690b92b6f3001'
 ALGORITHM='HS256'
 
