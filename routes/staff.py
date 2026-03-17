@@ -14,6 +14,7 @@ from helper.token_helper import TokenHelper
 from pydantic import Field
 from dtos.staff_models import StaffModel as CreateStaffRequest, UpdateStaffRequest
 from controllers.staff_controller import StaffController
+
 staff=APIRouter(
     prefix='/staff',
     tags=['staff']
@@ -45,6 +46,6 @@ async def delete_staff(
 ):
     return StaffController.delete_staff(staff_id,user,db)
 
-@staff.put("/staff/{client_id}/block", status_code=status.HTTP_200_OK)
-async def block_staff(client_id: int, user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    return StaffController.block_staff(client_id,user,db)
+@staff.put("/staff/{staff_id}/block", status_code=status.HTTP_200_OK)
+async def block_staff(staff_id: int,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return StaffController.block_staff(staff_id,user,db)

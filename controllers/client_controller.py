@@ -1,6 +1,7 @@
 # Importing libraries
 from typing import Optional
 from dtos.auth_models import UserModel
+from models.staff_table import Staff
 from helper.api_helper import APIHelper
 from models.clients_table import Clients
 from fastapi import APIRouter, Depends
@@ -50,9 +51,32 @@ class ClientController:
     def read_all(user: UserModel ,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        cases = ClientController.active_clients(db).all()
-        return cases
+        
+        if user.role == 'lawyer':
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+
+            # filter staff by lawyerId
+            clients = db.query(Clients).filter(
+                Clients.lawyerId == lawyer.id,
+                Clients.isBlocked.is_(False)
+            ).all()
+            return clients
+        else:
+
+            staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+            if staff is None:
+                raise HTTPException(status_code=404, detail="Staff not found")
+
+            clients = db.query(Clients).filter(
+                Clients.lawyerId == staff.lawyerId,
+            ).all()
+
+            return clients
+        
     def update_client(client_id: int,update_client_request: UpdateClientRequest,user: UserModel,db: Session):
         if user is None or user.role !='lawyer':
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
@@ -61,40 +85,72 @@ class ClientController:
 
         if case_model is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role == 'lawyer':
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        update_data = update_client_request.dict(exclude_unset=True, exclude_none=True)
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+            
+            if Clients.lawyerId==lawyer.id:
 
-        for key, value in update_data.items():
-            setattr(case_model, key, value)
-        
-        db.commit()
-        db.refresh(case_model)
+                update_data = update_client_request.dict(exclude_unset=True, exclude_none=True)
 
-        return case_model
+                for key, value in update_data.items():
+                    setattr(case_model, key, value)
+                
+                db.commit()
+                db.refresh(case_model)
 
+                return case_model
+            else:
+                staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+                if staff is None:
+                    raise HTTPException(status_code=404, detail="Staff not found")
+                
+                if Clients.lawyerId==staff.lawyerId:
+                    update_data = update_client_request.dict(exclude_unset=True, exclude_none=True)
+
+                for key, value in update_data.items():
+                    setattr(case_model, key, value)
+                
+                db.commit()
+                db.refresh(case_model)
+
+                return case_model
 
     def soft_delete_client(client_id: int, user: UserModel,db: Session ):
 
         if user is None or user.role != "lawyer":
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        db.query(Clients).filter(Clients.id == client_id).update(
-            {"isDeleted": True}
-        )
+        if lawyer is None:
+            raise HTTPException(status_code=404, detail="Lawyer not found")
+            
+        if Clients.lawyerId==lawyer.id:
+            db.query(Clients).filter(Clients.id == client_id).update(
+                {"isDeleted": True}
+            )
 
-        db.commit()
+            db.commit()
 
-        return {"message": "Client soft deleted successfully"}
+            return {"message": "Client soft deleted successfully"}
 
     def block_client(client_id: int, user: UserModel,db: Session):
 
         if user is None or user.role != "lawyer":
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        db.query(Clients).filter(Clients.id == client_id).update(
-            {"isBlocked": True}
-        )
+        if lawyer is None:
+            raise HTTPException(status_code=404, detail="Lawyer not found")
+            
+        if Clients.lawyerId==lawyer.id:
+            db.query(Clients).filter(Clients.id == client_id).update(
+                {"isBlocked": True}
+            )
 
-        db.commit()
+            db.commit()
 
-        return {"message": "Client blocked successfully"}
+            return {"message": "Client blocked successfully"}

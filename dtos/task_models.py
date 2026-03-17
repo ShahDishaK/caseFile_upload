@@ -7,7 +7,6 @@ class TaskModel(BaseModel):
     title :str
     description:str
     caseId:int
-    assignedTo:int
     status:str
    
 

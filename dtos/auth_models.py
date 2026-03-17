@@ -23,8 +23,7 @@ class UserModel(BaseModel):
         return value
     address: Optional[str] = None
     companyId:int
-    isDeleted: Optional[bool] = False
-    isBlocked: Optional[bool] = False
+    
 
    
 

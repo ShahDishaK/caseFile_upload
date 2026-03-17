@@ -13,7 +13,7 @@ from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from pydantic import BaseModel, Field
-from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
+from dtos.caseStatusHistory_models import CaseStatusHistoryModel as CreateCaseRequest, UpdateCaseStatusHistoryRequest
 from controllers.caseStatusHistory_controller import CaseController
 
 caseStatus=APIRouter(
@@ -27,12 +27,12 @@ async def create_case(create_case_request: CreateCaseRequest,user: UserModel = D
 
 @caseStatus.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    return CaseController.create_case(user,db)
+    return CaseController.read_all(user,db)
 
 @caseStatus.patch("/case/{case_id}", status_code=status.HTTP_200_OK)
-async def update_case(case_id: int,update_case_request: UpdateCaseRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    return CaseController.create_case(case_id,update_case_request,user,db)
+async def update_case(case_id: int,update_case_request: UpdateCaseStatusHistoryRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return CaseController.update_case(case_id,update_case_request,user,db)
 
 @caseStatus.delete("/case/{case_id}", status_code=status.HTTP_200_OK)
 async def delete_case(case_id: int, user: UserModel = Depends(TokenHelper.get_current_user), db: Session = Depends(get_db)):
-    return CaseController.create_case(case_id,user,db)
+    return CaseController.delete_case(case_id,user,db)

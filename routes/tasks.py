@@ -26,7 +26,7 @@ async def create_task(create_task_request: CreateTaskRequest,user: UserModel = D
 
 @task.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    return read_all(user,db)
+    return TaskController.read_all(user,db)
 
 @task.patch("/task/{task_id}", status_code=status.HTTP_200_OK)
 async def update_task(

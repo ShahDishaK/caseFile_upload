@@ -21,7 +21,7 @@ class TaskController:
             title=create_task_request.title,
             description=create_task_request.description,
             caseId=create_task_request.caseId,
-            assignedTo=create_task_request.assignedTo,
+            assignedTo=user.id,
             status=create_task_request.status,
         )
         db.add(create_document_model)
@@ -30,8 +30,9 @@ class TaskController:
     def read_all(user: UserModel,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
             raise HTTPException(status_code=401,detail='Authentication Failed')
-        documents = db.query(Tasks).all()
-        return documents
+        
+        tasks= db.query(Tasks).filter(Tasks.assignedTo==user.id).all()
+        return tasks
 
 
 
@@ -48,16 +49,17 @@ class TaskController:
 
         if task_model is None:
             raise HTTPException(status_code=404, detail="Document not found")
+        if task_model.assignedTo==user.id:
+            update_data = update_task_request.dict(exclude_unset=True, exclude_none=True)
 
-        update_data = update_task_request.dict(exclude_unset=True, exclude_none=True)
+            for key, value in update_data.items():
+                setattr(task_model, key, value)
+            
+            db.commit()
+            db.refresh(task_model)
 
-        for key, value in update_data.items():
-            setattr(task_model, key, value)
-        
-        db.commit()
-        db.refresh(task_model)
-
-        return task_model
+            return task_model
+        raise HTTPException(status_code=403, detail="Forbidden: You are not assigned to this task")
 
 
     # delete the document
@@ -70,9 +72,10 @@ class TaskController:
             raise HTTPException(status_code=401, detail='Authentication Failed')
 
         task_model = db.query(Tasks).filter(Tasks.id == task_id).first()
+        if task_model.assignedTo==user.id:
 
-        if task_model is None:
-            raise HTTPException(status_code=404, detail="Document not found")
-        Tasks.delete(task_model)
-        db.commit()
-        return {"message": "Document deleted successfully"}
+            if task_model is None:
+                raise HTTPException(status_code=404, detail="Document not found")
+            db.delete(task_model)
+            db.commit()
+            return {"message": "Document deleted successfully"}

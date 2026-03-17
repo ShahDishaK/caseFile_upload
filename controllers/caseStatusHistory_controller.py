@@ -1,6 +1,9 @@
 # Importing libraries
 from typing import Optional
 from dtos.auth_models import UserModel
+from models.lawyers_table import Lawyers
+from models.cases_table import Cases
+from models.staff_table import Staff
 from helper.api_helper import APIHelper
 # from models.cases_table import Cases
 from fastapi import APIRouter, Depends
@@ -28,56 +31,152 @@ class CaseController:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
         create_case_model = CaseStatusHistories(
             caseId=create_case_request.caseId,
-            title = create_case_request.title,
-            type=create_case_request.type,
-            description =create_case_request.description,
-            caseStage=create_case_request.caseStage,
-            caseCity=create_case_request.caseCity,
-            status=create_case_request.status,
-            caseClosedDate=create_case_request.caseClosedDate,
-            clientId=create_case_request.clientId
+            oldStatus = create_case_request.oldStatus,
+            newStatus=create_case_request.newStatus,
+            
         )
         db.add(create_case_model)
         db.commit()
 
-    def active_cases(db):
-        return db.query(CaseStatusHistories).filter(CaseStatusHistories.isDeleted.is_(False))
+   
+    def read_all(user: UserModel, db: Session):
 
-    def read_all(user: UserModel,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        cases = CaseController.active_cases(db).all()
-        return cases
+            raise HTTPException(status_code=401, detail="Authentication Failed")
+
+        # LAWYER
+        if user.role == 'lawyer':
+
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+
+            histories = db.query(CaseStatusHistories).join(
+                Cases, CaseStatusHistories.caseId == Cases.id
+            ).filter(
+                Cases.lawyerId == lawyer.id
+            ).all()
+
+            return histories
+
+        # STAFF
+        else:
+
+            staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+            if staff is None:
+                raise HTTPException(status_code=404, detail="Staff not found")
+
+            histories = db.query(CaseStatusHistories).filter(
+                CaseStatusHistories.caseId == staff.caseId
+            ).all()
+
+            return histories
 
 
-    def update_case(case_id: int,update_case_request: UpdateCaseStatusHistoryRequest,user: UserModel,db: Session ):
+    def update_case(
+    history_id: int,
+    update_request: UpdateCaseStatusHistoryRequest,
+    user: UserModel,
+    db: Session
+):
+
+        # 🔒 Authentication check
         if user is None or user.role not in ['lawyer', 'staff']:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+            raise HTTPException(status_code=401, detail="Authentication Failed")
 
-        case_model = db.query(CaseStatusHistories).filter(CaseStatusHistories.id == case_id).first()
+        # =========================
+        # 👨‍⚖️ LAWYER FLOW
+        # =========================
+        if user.role == 'lawyer':
 
-        if case_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        update_data = update_case_request.dict(exclude_unset=True, exclude_none=True)
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+
+            # 🔒 Secure query (VERY IMPORTANT)
+            history = db.query(CaseStatusHistories).join(
+                Cases, CaseStatusHistories.caseId == Cases.id
+            ).filter(
+                CaseStatusHistories.id == history_id,
+                Cases.lawyerId == lawyer.id
+            ).first()
+
+            if history is None:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Not authorized to update this history"
+                )
+
+        # =========================
+        # 👨‍💼 STAFF FLOW
+        # =========================
+        else:
+
+            staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+            if staff is None:
+                raise HTTPException(status_code=404, detail="Staff not found")
+
+            # 🔒 Secure query for staff
+            history = db.query(CaseStatusHistories).join(
+                Cases, CaseStatusHistories.caseId == Cases.id
+            ).filter(
+                CaseStatusHistories.id == history_id,
+                Cases.id == staff.caseId
+            ).first()
+
+            if history is None:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Not authorized to update this history"
+                )
+
+        # =========================
+        # ✏️ UPDATE DATA
+        # =========================
+        update_data = update_request.dict(exclude_unset=True, exclude_none=True)
 
         for key, value in update_data.items():
-            setattr(case_model, key, value)
-        
+            setattr(history, key, value)
+
         db.commit()
-        db.refresh(case_model)
+        db.refresh(history)
 
-        return case_model
+        return history
+    def delete_case(case_history_id: int, user: UserModel, db: Session):
 
+        if user is None or user.role != 'lawyer':
+            raise HTTPException(status_code=401, detail="Authentication Failed")
 
-    def delete_case(case_id: int, user: UserModel, db: Session):
+        # get lawyer
+        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        if user is None or user.role != "lawyer":
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if lawyer is None:
+            raise HTTPException(status_code=404, detail="Lawyer not found")
 
-        cases=db.query(CaseStatusHistories).filter(CaseStatusHistories.id == case_id)
-        db.delete(cases)
+        # get history
+        history = db.query(CaseStatusHistories).filter(
+            CaseStatusHistories.id == case_history_id
+        ).first()
+
+        if history is None:
+            raise HTTPException(status_code=404, detail="History not found")
+
+        # get case
+        case = db.query(Cases).filter(Cases.id == history.caseId).first()
+
+        if case is None:
+            raise HTTPException(status_code=404, detail="Case not found")
+
+        # authorization check
+        if case.lawyerId != lawyer.id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this history")
+
+        # delete
+        db.delete(history)
         db.commit()
 
-        return {"message": "CaseHistory deleted successfully"}
-    
+        return {"message": "Case history deleted successfully"}

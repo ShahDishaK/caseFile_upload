@@ -1,6 +1,8 @@
 # Importing libraries
 from typing import Optional
 from dtos.auth_models import UserModel
+from models.staff_table import Staff
+from models.lawyers_table import Lawyers
 from models.documents_table import Documents
 from fastapi import APIRouter, Depends
 from fastapi import Depends
@@ -41,9 +43,33 @@ class DocumentController:
     def read_all(user: UserModel,db: Session):
         if user is None or user.role not in ['lawyer', 'staff']:
             raise HTTPException(status_code=401,detail='Authentication Failed')
-        documents = db.query(Documents).all()
-        return documents
+         # LAWYER
+        if user.role == 'lawyer':
 
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+
+            documnets = db.query(Documents).filter(
+                Documents.userId == lawyer.userId,
+            ).all()
+
+            return documnets
+
+        # STAFF
+        else:
+
+            staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+            if staff is None:
+                raise HTTPException(status_code=404, detail="Staff not found")
+
+            documnets = db.query(Documents).filter(
+                Documents.userId == staff.user_id,
+            ).all()
+
+            return documnets
 
 
     def update_document(
@@ -59,16 +85,40 @@ class DocumentController:
 
         if document_model is None:
             raise HTTPException(status_code=404, detail="Document not found")
+        # LAWYER
+        if user.role == 'lawyer':
 
-        update_data = update_document_request.dict(exclude_unset=True, exclude_none=True)
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        for key, value in update_data.items():
-            setattr(document_model, key, value)
-        
-        db.commit()
-        db.refresh(document_model)
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+            if Documents.userId==lawyer.userId:
+                update_data = update_document_request.dict(exclude_unset=True, exclude_none=True)
 
-        return document_model
+                for key, value in update_data.items():
+                    setattr(document_model, key, value)
+                
+                db.commit()
+                db.refresh(document_model)
+
+                return document_model
+        else:
+            staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+            if staff is None:
+                raise HTTPException(status_code=404, detail="Staff not found")
+            
+            if Documents.userId==staff.user_id:
+                update_data = update_document_request.dict(exclude_unset=True, exclude_none=True)
+
+                for key, value in update_data.items():
+                    setattr(document_model, key, value)
+                
+                db.commit()
+                db.refresh(document_model)
+
+                return document_model
+
 
 
 # delete the document
@@ -79,11 +129,31 @@ class DocumentController:
     ):
         if user is None or user.role not in ['lawyer', 'staff']:
             raise HTTPException(status_code=401, detail='Authentication Failed')
-
+        
         document_model = db.query(Documents).filter(Documents.id == document_id).first()
 
         if document_model is None:
             raise HTTPException(status_code=404, detail="Document not found")
-        Documents.delete(document_model)
-        db.commit()
-        return {"message": "Document deleted successfully"}
+        # LAWYER
+        if user.role == 'lawyer':
+
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+
+            if lawyer is None:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+            if Documents.userId==lawyer.userId:
+                Documents.delete(document_model)
+                db.commit()
+                return {"message": "Document deleted successfully"}
+            
+        else:
+            staff = db.query(Staff).filter(Staff.user_id == user.id).first()
+
+            if staff is None:
+                raise HTTPException(status_code=404, detail="Staff not found")
+            
+            if Documents.userId==staff.user_id:
+                Documents.delete(document_model)
+                db.commit()
+                return {"message": "Document deleted successfully"}
+            

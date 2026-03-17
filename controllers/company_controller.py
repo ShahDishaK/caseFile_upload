@@ -55,3 +55,18 @@ class CompanyController:
         db.refresh(company)
 
         return company
+    
+    def delete_company(company_id: int, user: UserModel, db: Session):
+
+        if user is None or user.role != 'admin':
+            raise HTTPException(status_code=401, detail="Authentication Failed")
+
+        company = db.query(Companies).filter(Companies.id == company_id).first()
+
+        if company is None:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        db.delete(company)
+        db.commit()
+
+        return {"message": "Company deleted successfully"}

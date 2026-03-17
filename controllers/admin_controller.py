@@ -1,5 +1,7 @@
 # Importing libraries
 from dtos.auth_models import UserModel
+from models.companies_table import Companies
+from models.users_table import User, UserRole
 from helper.api_helper import APIHelper
 from models.cases_table import Cases
 from models.caseStatusHistory_table import CaseStatusHistories
@@ -76,4 +78,33 @@ class AdminController:
             "dueToday": today_tasks,
             "overdue": overdue_tasks,
             "completed": completed_tasks
+        }
+    
+    def company_users(company_id: int, user: UserModel, db: Session):
+
+        if user is None or user.role != 'admin':
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+
+        company = db.query(Companies).filter(Companies.id == company_id).first()
+
+        if company is None:
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+
+        lawyers = db.query(User).filter(
+            User.companyId == company_id,
+            User.role == UserRole.LAWYER,
+            User.isDeleted.is_(False)
+        ).all()
+
+        staff = db.query(User).filter(
+            User.companyId == company_id,
+            User.role == UserRole.STAFF,
+            User.isDeleted.is_(False)
+        ).all()
+
+        return {
+            "companyId": company.id,
+            "companyName": company.name,
+            "lawyers": lawyers,
+            "staff": staff
         }

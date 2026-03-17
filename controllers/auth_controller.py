@@ -48,5 +48,5 @@ class AuthController:
         user = ValidationHelper.authenticate_user(form_data.username, form_data.password, db)
         if not user:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        token = TokenHelper.create_access_token({'sub':user.name,'id': user.id, 'role':user.role})
+        token = TokenHelper.create_access_token({'sub':user.email,'id': user.id, 'role':user.role})
         return {'access_token': token, 'token_type': 'bearer'}

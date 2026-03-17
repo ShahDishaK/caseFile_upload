@@ -25,9 +25,8 @@ class LawyerController:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
         
         create_lawyer_model = Lawyers(
-            user_id=create_lawyer_request.userId,
+            userId=create_lawyer_request.userId,
             specialization=create_lawyer_request.specialization,
-            caseId=create_lawyer_request.caseId,
             isBlocked=create_lawyer_request.isBlocked
         )
         db.add(create_lawyer_model)

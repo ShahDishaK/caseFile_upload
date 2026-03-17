@@ -9,7 +9,7 @@ from dtos.company_models import CompanyModel, UpdateCompanyRequest
 from controllers.company_controller import CompanyController
 
 company = APIRouter(
-    prefix="/company",
+    prefix="/companies",
     tags=["Company"]
 )
 
@@ -39,3 +39,11 @@ async def update_company(
     db: Session = Depends(get_db)
 ):
     return CompanyController.update_company(company_id, request, user, db)
+
+@company.delete("/company/{company_id}", status_code=status.HTTP_200_OK)
+async def delete_company(
+    company_id: int,
+    user: UserModel = Depends(TokenHelper.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return CompanyController.delete_company(company_id, user, db)

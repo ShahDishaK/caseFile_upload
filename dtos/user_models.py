@@ -9,3 +9,12 @@ class UserVerification(BaseModel):
 class ForgotPassword(BaseModel):
     email:str
     new_password:str
+
+class UpdateUserProfile(BaseModel):
+    name:str
+    firstName:str
+    lastName:str
+    phoneNumber:str
+    address:str
+    role :str
+    companyId:int

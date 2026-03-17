@@ -27,4 +27,4 @@ async def create_document(create_session_request: CreatSessionRequest,user: User
 
 @session.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    return read_all(user,db)
+    return CourtSessionController.read_all(user,db)

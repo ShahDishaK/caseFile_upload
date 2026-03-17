@@ -548,7 +548,7 @@
 
 </changeSet>
 <!-- Add isBlocked column in Lawyers -->
-<changeSet id="4-add-isBlocked-to-lawyers" author="disha" runOnChange="true">
+<changeSet id="5-add-isBlocked-to-lawyers" author="disha" runOnChange="true">
     <preConditions onFail="MARK_RAN">
         <not>
             <columnExists tableName="lawyers" columnName="isBlocked"/>
@@ -738,6 +738,178 @@
         newDataType="INT"/>
 
   
+
+</changeSet>
+<changeSet id="4-add-isBlocked-to-lawyers" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="lawyers" columnName="isBlocked"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="lawyers">
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="16-create-staff" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="staff"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="staff">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="userId" type="INT"/>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="taskId" type="INT"/>
+
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="userId"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_userId_staff"/>
+
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_staff"/>
+
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_staff"/>
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="taskId"
+            referencedTableName="tasks"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_staff"/>
+
+</changeSet>
+
+<changeSet id="4-add-isBlocked-to-staff" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="staff" columnName="isBlocked"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="staff">
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="17-move-case-relation-to-cases" author="disha">
+
+    <!-- Add lawyerId column to cases -->
+    <addColumn tableName="cases">
+        <column name="lawyerId" type="INT"/>
+    </addColumn>
+
+    <!-- Add foreign key from cases.lawyerId -> lawyers.id -->
+    <addForeignKeyConstraint
+        baseTableName="cases"
+        baseColumnNames="lawyerId"
+        referencedTableName="lawyers"
+        referencedColumnNames="id"
+        constraintName="fk_cases_lawyer"/>
+
+    <!-- Remove foreign key from lawyers.caseId -->
+    <dropForeignKeyConstraint
+        baseTableName="lawyers"
+        constraintName="fk_lawyers_case"/>
+
+    <!-- Remove caseId column from lawyers table -->
+    <dropColumn
+        tableName="lawyers"
+        columnName="caseId"/>
+
+</changeSet>
+
+<changeSet id="17-create-invoices" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="invoices"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="invoices">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="totalHours" type="DECIMAL(10,2)"/>
+
+        <column name="totalAmount" type="DECIMAL(10,2)"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="clientId" type="INT"/>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="companyId" type="INT"/>
+
+        <column name="status" type="VARCHAR(50)"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_invoices"/>
+
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="clientId"
+            referencedTableName="clients"
+            referencedColumnNames="id"
+            constraintName="fk_clientId_invoices"/>
+
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_casesId_ivoices"/>
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="companyId"
+            referencedTableName="companies"
+            referencedColumnNames="id"
+            constraintName="fk_companiesId_invoices"/>
 
 </changeSet>
 

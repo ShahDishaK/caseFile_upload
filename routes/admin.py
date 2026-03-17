@@ -18,17 +18,21 @@ from controllers.admin_controller import AdminController
 
 admin=APIRouter(
     prefix='/admins',
-    tags=['admins']
+    tags=['dashboard']
 )
 
-@admin.get("/dashboard/case-counts")
+@admin.get("/dashboard/case_counts")
 def case_counts(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     return AdminController.get_case_counts(user,db)
 
-@admin.get("/dashboard/status-counts")
+@admin.get("/dashboard/status_counts")
 def get_case_status_count(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     return AdminController.get_case_status_count(user,db)
 
-@admin.get("/dashboard/task-counts")
+@admin.get("/dashboard/task_counts")
 def task_count(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     return AdminController.task_count(user,db)
+
+@admin.get("/dashboard/employees/{company_id}")
+def comapny_users(company_id:int,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.company_users(company_id,user,db)

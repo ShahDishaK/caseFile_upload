@@ -8,5 +8,4 @@ class SessionModel(BaseModel):
     sessionTime:time
     courtName:str
     caseId:int
-    lawyerId:int
     clientId:int

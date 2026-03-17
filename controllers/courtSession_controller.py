@@ -1,6 +1,7 @@
 # Importing libraries
 from typing import Optional
 from dtos.auth_models import UserModel
+from models.lawyers_table import Lawyers
 from models.courtSession_table import CourtSessions
 from fastapi import APIRouter, Depends
 from fastapi import Depends
@@ -23,12 +24,14 @@ class CourtSessionController:
     def create_document(create_session_request: CreatSessionRequest,user: UserModel,db: Session ):
         if user is None or user.role !='lawyer':
             raise HTTPException(status_code=401,detail='Authentication Failed')
+        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+        
         create_session_model = CourtSessions(
             sessionDate=create_session_request.sessionDate,
             sessionTime=create_session_request.sessionTime,
             courtName=create_session_request.courtName,
             caseId=create_session_request.caseId,
-            lawyerId=create_session_request.lawyerId,
+            lawyerId=lawyer.id,
             clientId=create_session_request.clientId,
         )
         db.add(create_session_model)
@@ -37,5 +40,14 @@ class CourtSessionController:
     def read_all(user: UserModel ,db: Session ):
         if user is None or user.role !='lawyer':
             raise HTTPException(status_code=401,detail='Authentication Failed')
-        sessions = db.query(CourtSessions).all()
-        return sessions
+        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+
+        if lawyer is None:
+            raise HTTPException(status_code=404, detail="Lawyer not found")
+
+        # filter staff by lawyerId
+        staff = db.query(CourtSessions).filter(
+            CourtSessions.lawyerId == lawyer.id,
+        ).all()
+
+        return staff

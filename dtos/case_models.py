@@ -23,3 +23,4 @@ class UpdateCaseRequest(BaseModel):
     status: Optional[str] = None
     caseCloseDate: Optional[datetime] = None
     clientId: Optional[int] = None
+    lawyerId: Optional[int] = None

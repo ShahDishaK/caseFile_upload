@@ -9,7 +9,6 @@ class CaseStatusHistoryModel(BaseModel):
     newStatus:str
       
 class UpdateCaseStatusHistoryRequest(BaseModel):
-    caseId: Optional[int] = None
     oldStatus: Optional[str] = None
     newStatus: Optional[str] = None
    
