@@ -11,6 +11,6 @@ class Staff(Base):
     caseId = Column(Integer, ForeignKey('cases.id'), nullable=True)
     lawyerId= Column(Integer,ForeignKey('lawyers.id'), nullable=True)
     taskId= Column(Integer,ForeignKey('tasks.id'),nullable=True)
-    isBlocked=Column(Boolean,default=False)
+    isBlocked = Column(Integer, default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

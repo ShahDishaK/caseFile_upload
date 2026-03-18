@@ -8,6 +8,7 @@ class UserRole(str, Enum):
     LAWYER = "lawyer"
     ADMIN = "admin"
     STAFF = "staff"
+    CLIENT = "client"
 
 class User(Base):
     __tablename__ = "users"
@@ -23,7 +24,7 @@ class User(Base):
     role = Column(SQLEnum(UserRole), nullable=True)
     companyId =  Column(Integer, ForeignKey('companies.id'),nullable=True)
     isDeleted=Column(Boolean,default=False)
-    isBlocked=Column(Boolean,default=False)
+    isBlocked = Column(Integer, default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

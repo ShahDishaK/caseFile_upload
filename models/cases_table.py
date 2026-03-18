@@ -24,6 +24,6 @@ class Cases(Base):
     caseClosedDate=Column(DateTime, nullable=True,default=None)
     clientId=Column(Integer, ForeignKey('clients.id'), nullable=True)
     lawyerId=Column(Integer, ForeignKey('lawyers.id'), nullable=True)
-    isDeleted=Column(Boolean, default=False)
+    isDeleted=Column(Integer, default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

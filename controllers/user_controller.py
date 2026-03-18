@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from config.db_config import dp_dependency, get_db
-from dtos.user_models import UserVerification,ForgotPassword
+from dtos.user_models import UpdateUserProfile, UserVerification,ForgotPassword
 from dtos.auth_models import UserModel
 from models.users_table import User
 from typing_extensions import Annotated
@@ -62,4 +62,19 @@ class UserController:
         db.commit()
 
         return {"message": "Password changed successfully"}
+    
+    def update_profile(update_user_profile: UpdateUserProfile, user: UserModel, db: Session):
+        if user is None:
+            raise HTTPException(status_code=401, detail='Authentication Failed')
+        user_model = db.query(User).filter(User.id == user.id).first()
+
+        update_data = update_user_profile.dict(exclude_unset=True, exclude_none=True)
+
+        for key, value in update_data.items():
+            setattr(user_model, key, value)
+                
+        db.commit()
+        db.refresh(user_model)
+
+        return user_model
 

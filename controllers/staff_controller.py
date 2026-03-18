@@ -21,12 +21,11 @@ from dtos.staff_models import StaffModel as CreateStaffRequest, UpdateStaffReque
 class StaffController:
     def create_staff(create_staff_request: CreateStaffRequest,user: UserModel,db: Session):
         if user is None or user.role !='lawyer':
-            raise HTTPException(status_code=401,detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
         create_staff_model = Staff(
             user_id=create_staff_request.user_id,
             caseId=create_staff_request.caseId,
             lawyerId=create_staff_request.lawyerId,
-            taskId=create_staff_request.taskId,
             isBlocked=create_staff_request.isBlocked
         )
         db.add(create_staff_model)
@@ -38,18 +37,21 @@ class StaffController:
 
     def read_all(user: UserModel, db: Session):
         if user is None or user.role != 'lawyer':
-            raise HTTPException(status_code=401, detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         # get lawyer using logged in user
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
             raise HTTPException(status_code=404, detail="Lawyer not found")
+        if lawyer.isBlocked == b'\x01':
+            raise HTTPException(status_code=403, detail="You are blocked")
+
 
         # filter staff by lawyerId
         staff = db.query(Staff).filter(
             Staff.lawyerId == lawyer.id,
-            Staff.isBlocked.is_(False)
+            Staff.isBlocked==0
         ).all()
 
         return staff
@@ -61,7 +63,7 @@ class StaffController:
     db: Session
     ):
         if user is None or user.role !='lawyer':
-            raise HTTPException(status_code=401, detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
 
@@ -71,6 +73,9 @@ class StaffController:
 
         if lawyer is None:
             raise HTTPException(status_code=404, detail="Lawyer not found")
+        if lawyer.isBlocked == b'\x01':
+            raise HTTPException(status_code=403, detail="You are blocked")
+
         if Staff.lawyerId==lawyer.id:
             update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
 
@@ -89,7 +94,7 @@ class StaffController:
         db: Session
     ):
         if user is None or user.role !='lawyer':
-            raise HTTPException(status_code=401, detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
         if staff_model is None:
@@ -98,30 +103,51 @@ class StaffController:
 
         if lawyer is None:
             raise HTTPException(status_code=404, detail="Lawyer not found")
+        if lawyer.isBlocked == b'\x01':
+            raise HTTPException(status_code=403, detail="You are blocked")
+
         if Staff.lawyerId==lawyer.id:
             Staff.delete(staff_model)
             db.commit()
             return {"message": "Document deleted successfully"}
 
     # Block staff
-    def block_staff(client_id: int, user: UserModel,db: Session):
+    def block_staff(client_id: int, user: UserModel, db: Session):
 
         if user is None or user.role != "lawyer":
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
             raise HTTPException(status_code=404, detail="Lawyer not found")
-        if Staff.lawyerId==lawyer.id:
-            db.query(Staff).filter(Staff.id == client_id).update(
-                {"isBlocked": True}
-            )
-            db.commit()
-            create_staff_model = BlockedStaff(
-                lawyerId=lawyer.id,
-                staffId=client_id,
-            )
-            db.add(create_staff_model)
-            db.commit()
 
-            return {"message": "Client blocked successfully"}
+        if lawyer.isBlocked == b'\x01':
+            raise HTTPException(status_code=403, detail="You are blocked")
+
+        # ✅ Get actual staff row
+        staff = db.query(Staff).filter(Staff.id == client_id).first()
+
+        if staff is None:
+            raise HTTPException(status_code=404, detail="Staff not found")
+
+        # ✅ Correct check
+        if staff.lawyerId != lawyer.id:
+            raise HTTPException(status_code=403, detail="Not allowed")
+
+        # ✅ Update
+        staff.isBlocked = 1
+
+        db.commit()
+        db.refresh(staff)
+
+        # ✅ Add to blocked table
+        blocked_entry = BlockedStaff(
+            lawyerId=lawyer.id,
+            staffId=client_id,
+        )
+
+        db.add(blocked_entry)
+        db.commit()
+
+        return {"message": "Client blocked successfully"}

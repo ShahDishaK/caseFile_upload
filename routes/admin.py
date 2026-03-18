@@ -30,8 +30,8 @@ def get_case_status_count(user: UserModel = Depends(TokenHelper.get_current_user
     return AdminController.get_case_status_count(user,db)
 
 @admin.get("/dashboard/task_counts")
-def task_count(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-    return AdminController.task_count(user,db)
+def task_counts(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.task_counts(user,db)
 
 @admin.get("/dashboard/employees/{company_id}")
 def comapny_users(company_id:int,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):

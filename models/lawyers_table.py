@@ -10,6 +10,7 @@ class Lawyers(Base):
     id = Column(Integer, primary_key=True, index=True)
     userId = Column(Integer, ForeignKey('users.id'), nullable=False)
     specialization = Column(String(255), nullable=False)
-    isBlocked = Column(Boolean, default=False)
+    isBlocked = Column(Integer, default=0)
+    isDeleted=Column(Integer, default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

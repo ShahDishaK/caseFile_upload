@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from starlette import status
 from sqlalchemy.orm import Session
+from helper.api_helper import APIHelper
 from models.companies_table import Companies
 from dtos.company_models import CompanyModel, UpdateCompanyRequest
 from dtos.auth_models import UserModel
@@ -11,7 +12,7 @@ class CompanyController:
    
     def create_company(create_company_request: CompanyModel, user: UserModel, db: Session):
         if user is None or user.role != 'admin':
-            raise HTTPException(status_code=401, detail="Authentication Failed")
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         company = Companies(
             name=create_company_request.name,
@@ -30,7 +31,7 @@ class CompanyController:
    
     def read_all(user: UserModel, db: Session):
         if user is None or user.role != 'admin':
-            raise HTTPException(status_code=401, detail="Authentication Failed")
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         return db.query(Companies).all()
 
@@ -39,7 +40,7 @@ class CompanyController:
     def update_company(company_id: int, update_company_request: UpdateCompanyRequest, user: UserModel, db: Session):
 
         if user is None or user.role != 'admin':
-            raise HTTPException(status_code=401, detail="Authentication Failed")
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
@@ -59,7 +60,7 @@ class CompanyController:
     def delete_company(company_id: int, user: UserModel, db: Session):
 
         if user is None or user.role != 'admin':
-            raise HTTPException(status_code=401, detail="Authentication Failed")
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         company = db.query(Companies).filter(Companies.id == company_id).first()
 

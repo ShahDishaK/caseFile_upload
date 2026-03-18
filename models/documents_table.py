@@ -8,7 +8,7 @@ class Documents(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
-    documentLink = Column(String(255), nullable=False)
+    documentLink = Column(String, nullable=False)
     fileType = Column(String(50), nullable=False)
     description=Column(String(255), nullable=True)
     notes=Column(String(255), nullable=True)

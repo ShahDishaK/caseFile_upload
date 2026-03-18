@@ -1,6 +1,9 @@
 # Importing libraries
 from typing import Optional
 from dtos.auth_models import UserModel
+from helper.api_helper import APIHelper
+from models.staff_table import Staff
+from models.lawyers_table import Lawyers
 from models.tasks_table import Tasks
 from fastapi import APIRouter, Depends
 from fastapi import Depends
@@ -16,7 +19,7 @@ from dtos.task_models import TaskModel as CreateTaskRequest, UpdateTaskRequest
 class TaskController:
     def create_task(create_task_request: CreateTaskRequest,user: UserModel,db: Session):
         if user is None or user.role not in ['lawyer', 'staff']:
-            raise HTTPException(status_code=401,detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
         create_document_model = Tasks(
             title=create_task_request.title,
             description=create_task_request.description,
@@ -29,10 +32,36 @@ class TaskController:
 
     def read_all(user: UserModel,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
-            raise HTTPException(status_code=401,detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role=='lawyer':
+            lawyer = db.query(Lawyers).filter(
+                Lawyers.userId == user.id
+            ).first()
+
+            if not lawyer:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+
+            # ✅ BLOCK CHECK FIXED
+            if lawyer.isBlocked == b'\x01':
+                raise HTTPException(status_code=403, detail="You are blocked")
+
+            tasks= db.query(Tasks).filter(Tasks.assignedTo==user.id).all()
+            return tasks
         
-        tasks= db.query(Tasks).filter(Tasks.assignedTo==user.id).all()
-        return tasks
+        elif user.role=='staff':
+            staff = db.query(Staff).filter(
+                staff.userId == user.id
+            ).first()
+
+            if not staff:
+                raise HTTPException(status_code=404, detail="Lawyer not found")
+
+            # ✅ BLOCK CHECK FIXED
+            if staff.isBlocked == b'\x01':
+                raise HTTPException(status_code=403, detail="You are blocked")
+
+            tasks= db.query(Tasks).filter(Tasks.assignedTo==user.id).all()
+            return tasks
 
 
 
@@ -43,7 +72,7 @@ class TaskController:
     db: Session
     ):
         if user is None or user.role not in ['lawyer', 'staff']:
-            raise HTTPException(status_code=401, detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         task_model = db.query(Tasks).filter(Tasks.id == task_id).first()
 
@@ -69,7 +98,7 @@ class TaskController:
         db: Session
     ):
         if user is None or user.role not in ['lawyer', 'staff']:
-            raise HTTPException(status_code=401, detail='Authentication Failed')
+            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         task_model = db.query(Tasks).filter(Tasks.id == task_id).first()
         if task_model.assignedTo==user.id:

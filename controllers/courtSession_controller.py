@@ -1,6 +1,7 @@
 # Importing libraries
 from typing import Optional
 from dtos.auth_models import UserModel
+from helper.api_helper import APIHelper
 from models.lawyers_table import Lawyers
 from models.courtSession_table import CourtSessions
 from fastapi import APIRouter, Depends
@@ -23,7 +24,7 @@ class CourtSessionController:
 
     def create_document(create_session_request: CreatSessionRequest,user: UserModel,db: Session ):
         if user is None or user.role !='lawyer':
-            raise HTTPException(status_code=401,detail='Authentication Failed')
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         
         create_session_model = CourtSessions(
@@ -39,11 +40,13 @@ class CourtSessionController:
 
     def read_all(user: UserModel ,db: Session ):
         if user is None or user.role !='lawyer':
-            raise HTTPException(status_code=401,detail='Authentication Failed')
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
             raise HTTPException(status_code=404, detail="Lawyer not found")
+        if lawyer.isBlocked == b'\x01':
+            raise HTTPException(status_code=403, detail="You are blocked")
 
         # filter staff by lawyerId
         staff = db.query(CourtSessions).filter(

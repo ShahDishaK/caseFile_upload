@@ -1,13 +1,10 @@
 # Importing libraries
-from typing import Optional
 from dtos.auth_models import UserModel
-from models.tasks_table import Tasks
 from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from config.db_config import get_db
-from typing_extensions import Annotated
-from fastapi import APIRouter,Depends,HTTPException,Path
+from fastapi import APIRouter,Depends
 from starlette import status 
 from helper.token_helper import TokenHelper
 from pydantic import Field

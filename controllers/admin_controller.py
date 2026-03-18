@@ -54,7 +54,7 @@ class AdminController:
         ).scalar()
 
         return {
-        "casesClosedLast30Days": closed_last_30_days
+        "casesStatusChangeInLast30Days": closed_last_30_days
         }
     
     # task count based on due

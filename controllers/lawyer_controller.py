@@ -33,7 +33,7 @@ class LawyerController:
         db.commit()
   
     def active_lawyers(db):
-        return db.query(Lawyers).filter(Lawyers.isBlocked.is_(False))
+        return db.query(Lawyers).filter(Lawyers.isBlocked.is_(False),Lawyers.isDeleted.is_(False))
 
 
     def read_all(user: UserModel ,db: Session ):
@@ -68,7 +68,9 @@ class LawyerController:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         lawyer=db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
-        db.delete(lawyer)
+        if lawyer is None:
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        lawyer.isDeleted=b'\x01'
         db.commit()
 
         return {"message": "Lawyer deleted successfully"}
@@ -79,7 +81,7 @@ class LawyerController:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         db.query(Lawyers).filter(Lawyers.id == lawyer_id).update(
-            {"isBlocked": True}
+            {"isBlocked":1}
         )
 
         db.commit()

@@ -1,19 +1,16 @@
 # Importing libraries
-from typing import Optional
 from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import dp_dependency, get_db
-from dtos.user_models import UserVerification,ForgotPassword
+from config.db_config import  get_db
+from dtos.user_models import UpdateUserProfile, UserVerification,ForgotPassword
 from dtos.auth_models import UserModel
-from models.users_table import User
 from typing_extensions import Annotated
-from fastapi import APIRouter,Depends,HTTPException,Path
+from fastapi import APIRouter,Depends
 from starlette import status 
 from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
-from pydantic import BaseModel, Field
+from fastapi.security import OAuth2PasswordBearer
 from controllers.user_controller import UserController
 
 router=APIRouter(
@@ -45,3 +42,7 @@ async def change_password(user_verification: UserVerification,user: UserModel = 
 @router.put("/forgot_password", status_code=status.HTTP_200_OK)
 async def forgot_password(user_verification: ForgotPassword, db: Session = Depends(get_db)):
     return UserController.forgot_password(user_verification,db)
+
+@router.put("/updateProfile", status_code=status.HTTP_200_OK)
+async def update_profile(update_user_profile: UpdateUserProfile,user: UserModel = Depends(TokenHelper.get_current_user), db: Session = Depends(get_db)):
+    return UserController.update_profile(update_user_profile,user,db)

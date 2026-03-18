@@ -32,8 +32,7 @@ class AuthController:
             role=create_user_request.role,
             address=create_user_request.address,
             companyId=create_user_request.companyId,
-            isDeleted=create_user_request.isDeleted,
-            isBlocked=create_user_request.isBlocked
+           
 
         )
         db.add(create_user_model)

@@ -913,4 +913,22 @@
 
 </changeSet>
 
+<changeSet id="18-drop-unique-name-users" author="disha">
+
+    <dropUniqueConstraint
+        tableName="users"
+        constraintName="name"/>
+
+</changeSet>
+
+<changeSet id="19-add-isDeleted-to-lawyers" author="disha">
+
+    <addColumn tableName="lawyers">
+
+        <column name="isDeleted" type="BOOLEAN" defaultValueBoolean="false">
+        </column>
+
+    </addColumn>
+
+</changeSet>
 </databaseChangeLog>
