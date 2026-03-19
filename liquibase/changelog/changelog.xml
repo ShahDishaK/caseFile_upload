@@ -931,4 +931,91 @@
     </addColumn>
 
 </changeSet>
+
+<changeSet id="20-modify-documents-link-columns" author="disha">
+
+    <!-- Change datatype of sessionDate -->
+    <modifyDataType 
+        tableName="documents"
+        columnName="documentLink"
+        newDataType="LONGTEXT"/>
+
+    
+</changeSet>
+
+<changeSet id="add-stripe-fields-to-invoices" author="disha">
+    <addColumn tableName="invoices">
+
+        <column name="stripeSessionId" type="VARCHAR(255)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="stripePaymentIntentId" type="VARCHAR(255)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="paymentStatus" type="VARCHAR(50)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="paymentMethod" type="VARCHAR(50)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="paidAt" type="DATETIME">
+            <constraints nullable="true"/>
+        </column>
+
+    </addColumn>
+</changeSet>
+
+<changeSet id="add-additional-fields-to-users-tasks-clients" author="disha">
+    <addColumn tableName="clients">
+        <column name="occupation" type="VARCHAR(100)">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+    <addColumn tableName="users">
+        <column name="gender" type="VARCHAR(100)">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+    <addColumn tableName="tasks">
+        <column name="priority" type="VARCHAR(100)">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+</changeSet>
+
+<changeSet id="Add-userId-to-clients" author="disha">
+
+    <!-- Add lawyerId column to cases -->
+    <addColumn tableName="clients">
+        <column name="userId" type="INT"/>
+    </addColumn>
+
+    <!-- Add foreign key from cases.lawyerId -> lawyers.id -->
+    <addForeignKeyConstraint
+        baseTableName="clients"
+        baseColumnNames="userId"
+        referencedTableName="users"
+        referencedColumnNames="id"
+        constraintName="fk_clients_userId"/>
+</changeSet>
+
+<changeSet id="fk-task-on-delete-null" author="disha">
+      
+    <addForeignKeyConstraint
+        baseTableName="staff"
+        baseColumnNames="taskId"
+        referencedTableName="tasks"
+        referencedColumnNames="id"
+        constraintName="sk_staff_task"
+        onDelete="SET NULL"/>
+
+</changeSet>
+
 </databaseChangeLog>

@@ -1,7 +1,5 @@
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime
-
 
 class CompanyModel(BaseModel):
     name :str

@@ -1,11 +1,8 @@
-from fastapi import HTTPException
-from starlette import status
 from sqlalchemy.orm import Session
 from helper.api_helper import APIHelper
 from models.companies_table import Companies
 from dtos.company_models import CompanyModel, UpdateCompanyRequest
 from dtos.auth_models import UserModel
-
 
 class CompanyController:
 
@@ -45,7 +42,7 @@ class CompanyController:
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
         if company is None:
-            raise HTTPException(status_code=404, detail="Company not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.COMPANY_NOT_FOUND')
 
         update_data = update_company_request.dict(exclude_unset=True, exclude_none=True)
 
@@ -65,7 +62,7 @@ class CompanyController:
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
         if company is None:
-            raise HTTPException(status_code=404, detail="Company not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.COMAPNY_NOT_FOUND')
 
         db.delete(company)
         db.commit()

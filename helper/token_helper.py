@@ -1,7 +1,6 @@
 # Importing libraries
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-
 from sqlalchemy.orm import Session
 from dtos.auth_models import UserModel
 from helper.api_helper import APIHelper
@@ -14,8 +13,6 @@ from utils.db_helper import DBHelper
 
 # JWT Configuration
 load_dotenv()
-"""Please generate a new JWT_SECRET `using openssl rand -hex 32` command and add it in the .env file"""
-
 # Initializing the Hashing alogorith
 JWT_SECRET = os.getenv("JWT_SECRET")
 ALGORITHM = "HS256"
@@ -40,17 +37,13 @@ class TokenHelper:
             user_role: str = payload.get('role')
             if user_id is None:
                 return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-                # return {"error":"404"}
-        except JWTError:
-                # return {"error":"404"}
-            
+        except JWTError:            
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        
         user = DBHelper.get_user_by_id(user_id,db)
         if user is None:
             return APIHelper.send_unauthorized_error(
                 errorMessageKey='translations.UNAUTHORIZED')
-                # return {"error":"404"}
-
         return user
 
     def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db)) -> UserModel:

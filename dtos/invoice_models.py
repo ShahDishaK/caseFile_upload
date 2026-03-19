@@ -1,22 +1,19 @@
 from typing import Optional
-from unicodedata import decimal
+from decimal import Decimal
 from pydantic import BaseModel
-from datetime import datetime
-
 
 class InvoiceModel(BaseModel):
-    totalHours :decimal
-    totalAmount :decimal 
-    clientId:str
-    caseId : str
-    companyId: str
-    status:str
+    totalHours: Decimal
+    totalAmount: Decimal 
+    clientId: int
+    caseId: int
+    companyId: int
+    status: str
     
 class UpdateInvoiceRequest(BaseModel):
-    totalHours: Optional[decimal] = None
-    totalAmount: Optional[decimal] = None
+    totalHours: Optional[Decimal] = None
+    totalAmount: Optional[Decimal] = None
     clientId: Optional[int] = None
     caseId: Optional[int] = None
     companyId: Optional[int] = None
-    status: Optional[str] = None
     lawyerId: Optional[int] = None

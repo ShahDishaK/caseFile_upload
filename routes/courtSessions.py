@@ -1,18 +1,12 @@
 # Importing libraries
-from typing import Optional
 from dtos.auth_models import UserModel
-from models.courtSession_table import CourtSessions
 from fastapi import APIRouter, Depends
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import dp_dependency, get_db
-from typing_extensions import Annotated
-from fastapi import APIRouter,Depends,HTTPException,Path
+from config.db_config import  get_db
+from fastapi import APIRouter,Depends
 from starlette import status 
 from helper.token_helper import TokenHelper
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
-from pydantic import BaseModel, Field
 from dtos.courtsession_models import SessionModel as CreatSessionRequest
 from controllers.courtSession_controller import CourtSessionController
 

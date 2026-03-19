@@ -43,6 +43,6 @@ async def change_password(user_verification: UserVerification,user: UserModel = 
 async def forgot_password(user_verification: ForgotPassword, db: Session = Depends(get_db)):
     return UserController.forgot_password(user_verification,db)
 
-@router.put("/updateProfile", status_code=status.HTTP_200_OK)
+@router.patch   ("/updateProfile", status_code=status.HTTP_200_OK)
 async def update_profile(update_user_profile: UpdateUserProfile,user: UserModel = Depends(TokenHelper.get_current_user), db: Session = Depends(get_db)):
     return UserController.update_profile(update_user_profile,user,db)

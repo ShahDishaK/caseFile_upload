@@ -3,6 +3,7 @@
     "SUCCESS": "success",
     "FAILURE": "failure",
     "UNAUTHORIZED": "You are unauthorized",
-    "NOT_FOUND":"response not found"
+    "NOT_FOUND":"response not found",
+    "FORBIDDEN":"not allowded"
   }
 }

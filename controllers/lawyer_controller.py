@@ -1,22 +1,9 @@
 # Importing libraries
-from typing import Optional
 from dtos.auth_models import UserModel
 from helper.api_helper import APIHelper
-from fastapi import APIRouter, Depends
-from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import dp_dependency, get_db
-from typing_extensions import Annotated
-from fastapi import APIRouter,Depends,HTTPException,Path
-from starlette import status 
-from helper.token_helper import TokenHelper
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
-from pydantic import BaseModel, Field
 from models.lawyers_table import Lawyers
 from dtos.lawyer_models import LawyerModel as CreateLawyerRequest, UpdateLawyerRequest
-
-
 
 class LawyerController:
 
@@ -49,7 +36,7 @@ class LawyerController:
         lawyer_model = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
         if lawyer_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.UNAUTHORIZED')
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
         update_data = update_lawyer_request.dict(exclude_unset=True, exclude_none=True)
 

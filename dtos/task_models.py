@@ -1,14 +1,12 @@
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime
-
 
 class TaskModel(BaseModel):
     title :str
     description:str
     caseId:int
     status:str
-   
+    priority:str
 
 class UpdateTaskRequest(BaseModel):
     title: Optional[str] = None
@@ -16,3 +14,4 @@ class UpdateTaskRequest(BaseModel):
     caseId: Optional[int] = None
     assignedTo: Optional[int] = None
     status: Optional[str] = None
+    priority: Optional[str] = None  

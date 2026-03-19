@@ -25,10 +25,10 @@ class DocumentController:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             if lawyer is None:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         #  STAFF CHECK
         else:
@@ -39,10 +39,8 @@ class DocumentController:
             ).first()
 
             if staff is None:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are blocked or not assigned to this case"
-                )
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_THIS_DOCUMENT')
+                
 
 
         base64_content = None
@@ -97,10 +95,10 @@ class DocumentController:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             if lawyer is None:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             documents = db.query(Documents).join(
                 Cases, Documents.caseId == Cases.id
@@ -122,10 +120,8 @@ class DocumentController:
             ).all()
 
             if not documents:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are blocked or no documents available"
-                )
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_AVAILABLE_DOCUMENTS')
+                
 
             return documents
 
@@ -139,17 +135,17 @@ class DocumentController:
         document = db.query(Documents).filter(Documents.id == document_id).first()
 
         if document is None:
-            raise HTTPException(status_code=404, detail="Document not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
 
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             if lawyer is None:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             case = db.query(Cases).filter(Cases.id == document.caseId).first()
 
@@ -165,10 +161,8 @@ class DocumentController:
             ).first()
 
             if staff is None:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are blocked or not assigned to this case"
-                )
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_DOCUMENT')
+                
 
         #  UPDATE
         update_data = update_document_request.dict(exclude_unset=True, exclude_none=True)
@@ -191,22 +185,22 @@ class DocumentController:
         document = db.query(Documents).filter(Documents.id == document_id).first()
 
         if document is None:
-            raise HTTPException(status_code=404, detail="Document not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
 
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             if lawyer is None:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             case = db.query(Cases).filter(Cases.id == document.caseId).first()
 
             if case.lawyerId != lawyer.id:
-                raise HTTPException(status_code=403, detail="Not authorized")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.NO_ACCESS_TO_THIS_DOCUMENT')
 
         #  STAFF
         else:
@@ -217,10 +211,8 @@ class DocumentController:
             ).first()
 
             if staff is None:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are blocked or not assigned to this case"
-                )
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_CASE')
+                
 
         db.delete(document)
         db.commit()

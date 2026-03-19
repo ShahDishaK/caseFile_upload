@@ -1,19 +1,10 @@
 # Importing libraries
-from typing import Optional
 from dtos.auth_models import UserModel
 from helper.api_helper import APIHelper
 from models.staff_table import Staff
 from models.lawyers_table import Lawyers
 from models.tasks_table import Tasks
-from fastapi import APIRouter, Depends
-from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import get_db
-from typing_extensions import Annotated
-from fastapi import APIRouter,Depends,HTTPException,Path
-from starlette import status 
-from helper.token_helper import TokenHelper
-from pydantic import Field
 from dtos.task_models import TaskModel as CreateTaskRequest, UpdateTaskRequest
 
 class TaskController:
@@ -26,6 +17,7 @@ class TaskController:
             caseId=create_task_request.caseId,
             assignedTo=user.id,
             status=create_task_request.status,
+            priority=create_task_request.priority
         )
         db.add(create_document_model)
         db.commit()
@@ -39,11 +31,11 @@ class TaskController:
             ).first()
 
             if not lawyer:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            # ✅ BLOCK CHECK FIXED
+            #  BLOCK
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             tasks= db.query(Tasks).filter(Tasks.assignedTo==user.id).all()
             return tasks
@@ -54,11 +46,11 @@ class TaskController:
             ).first()
 
             if not staff:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
 
-            # ✅ BLOCK CHECK FIXED
+            #  BLOCK 
             if staff.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             tasks= db.query(Tasks).filter(Tasks.assignedTo==user.id).all()
             return tasks
@@ -77,7 +69,7 @@ class TaskController:
         task_model = db.query(Tasks).filter(Tasks.id == task_id).first()
 
         if task_model is None:
-            raise HTTPException(status_code=404, detail="Document not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.TASK_NOT_FOUND')
         if task_model.assignedTo==user.id:
             update_data = update_task_request.dict(exclude_unset=True, exclude_none=True)
 
@@ -88,7 +80,7 @@ class TaskController:
             db.refresh(task_model)
 
             return task_model
-        raise HTTPException(status_code=403, detail="Forbidden: You are not assigned to this task")
+        return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ASSIGNED_TO_THIS_TASK')
 
 
     # delete the document
@@ -104,7 +96,7 @@ class TaskController:
         if task_model.assignedTo==user.id:
 
             if task_model is None:
-                raise HTTPException(status_code=404, detail="Document not found")
+                return APIHelper.send_not_found_error(errorMessageKey='translations.TASK_NOT_FOUND')
             db.delete(task_model)
             db.commit()
             return {"message": "Document deleted successfully"}

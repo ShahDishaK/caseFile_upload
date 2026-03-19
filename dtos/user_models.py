@@ -1,6 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field, validator, constr
-from dtos.auth_models import UserModel
+from pydantic import BaseModel, Field, constr
 
 class UserVerification(BaseModel):
     password: str
@@ -16,3 +15,5 @@ class UpdateUserProfile(BaseModel):
     lastName: Optional[str] = None
     phoneNumber: Optional[constr(regex="^[0-9]{10}$")] = None
     address: Optional[str] = None
+    gender: Optional[str] = None
+

@@ -18,6 +18,7 @@ class Tasks(Base):
     description = Column(String(255), nullable=False)
     caseId=Column(Integer,ForeignKey('cases.id'), nullable=True)
     assignedTo=Column(Integer,ForeignKey('users.id'), nullable=True)
+    priority=Column(String,nullable=True)
     status=Column(SQLEnum(TaskStatus), nullable=False)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -1,15 +1,11 @@
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime
-
 
 class StaffModel(BaseModel):
     user_id :int
     caseId :int
     lawyerId:int
     isBlocked:Optional[int]=0
-
-   
 
 class UpdateStaffRequest(BaseModel):
     user_id :Optional[int]=None

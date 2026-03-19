@@ -4,15 +4,13 @@ from models.staff_table import Staff
 from models.lawyers_table import Lawyers
 from models.cases_table import Cases
 from helper.api_helper import APIHelper
-
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
-
 
 class CaseController:
 
-    # ✅ CREATE CASE
+    #  CREATE CASE
     def create_case(create_case_request, user: UserModel, db: Session):
+
         if user is None or user.role != 'lawyer':
             return APIHelper.send_unauthorized_error(
                 errorMessageKey='translations.UNAUTHORIZED'
@@ -23,11 +21,15 @@ class CaseController:
         ).first()
 
         if not lawyer:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
+            return APIHelper.send_not_found_error(
+                errorMessageKey='translations.LAWYER_NOT_FOUND'
+            )
 
-        # ✅ BLOCK CHECK (FIXED)
+        #  BLOCK CHECK
         if lawyer.isBlocked == b'\x01':
-            raise HTTPException(status_code=403, detail="You are blocked")
+            return APIHelper.send_forbidden_error(
+                errorMessageKey='translations.BLOCKED'
+            )
 
         case = Cases(
             caseNumber=create_case_request.caseNumber,
@@ -40,7 +42,7 @@ class CaseController:
             status=create_case_request.status,
             caseClosedDate=create_case_request.caseClosedDate,
             clientId=create_case_request.clientId,
-            isDeleted=b'\x00'   # ✅ NOT deleted
+            isDeleted=b'\x00'
         )
 
         db.add(case)
@@ -50,7 +52,7 @@ class CaseController:
         return case
 
 
-    # ✅ READ ALL CASES
+    #  READ ALL CASES
     def read_all(user: UserModel, db: Session):
 
         if user is None or user.role not in ['lawyer', 'staff']:
@@ -63,19 +65,22 @@ class CaseController:
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
-                Lawyers.isDeleted==b'\x00'
+                Lawyers.isDeleted == b'\x00'
             ).first()
 
             if not lawyer:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(
+                    errorMessageKey='translations.LAWYER_NOT_FOUND'
+                )
 
-            # ✅ BLOCK CHECK FIXED
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey='translations.BLOCKED'
+                )
 
             cases = db.query(Cases).filter(
                 Cases.lawyerId == lawyer.id,
-                Cases.isDeleted == b'\x00'   # ✅ NOT deleted
+                Cases.isDeleted == b'\x00'
             ).all()
 
             return cases
@@ -88,9 +93,10 @@ class CaseController:
             ).all()
 
             if not staff_records:
-                raise HTTPException(status_code=404, detail="Staff not found")
+                return APIHelper.send_not_found_error(
+                    errorMessageKey='translations.STAFF_NOT_FOUND'
+                )
 
-            # ✅ FIXED BLOCK CHECK
             allowed_case_ids = [
                 staff.caseId
                 for staff in staff_records
@@ -98,9 +104,8 @@ class CaseController:
             ]
 
             if not allowed_case_ids:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are blocked by all lawyers"
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey='translations.BLOCKED'
                 )
 
             cases = db.query(Cases).filter(
@@ -111,7 +116,7 @@ class CaseController:
             return cases
 
 
-    # ✅ UPDATE CASE
+    #  UPDATE CASE
     def update_case(case_id: int, update_case_request, user: UserModel, db: Session):
 
         if user is None or user.role not in ['lawyer', 'staff']:
@@ -125,24 +130,32 @@ class CaseController:
         ).first()
 
         if not case:
-            raise HTTPException(status_code=404, detail="Case not found")
+            return APIHelper.send_not_found_error(
+                errorMessageKey='translations.CASE_NOT_FOUND'
+            )
 
         # ================= LAWYER =================
         if user.role == 'lawyer':
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
-                Lawyers.isDeleted==b'\x00'
+                Lawyers.isDeleted == b'\x00'
             ).first()
 
             if not lawyer:
-                raise HTTPException(status_code=404, detail="Lawyer not found")
+                return APIHelper.send_not_found_error(
+                    errorMessageKey='translations.LAWYER_NOT_FOUND'
+                )
 
             if lawyer.isBlocked == b'\x01':
-                raise HTTPException(status_code=403, detail="You are blocked")
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey='translations.BLOCKED'
+                )
 
             if case.lawyerId != lawyer.id:
-                raise HTTPException(status_code=403, detail="Not your case")
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey='translations.NOT_ALLOWED'
+                )
 
         # ================= STAFF =================
         elif user.role == 'staff':
@@ -156,10 +169,11 @@ class CaseController:
             ).first()
 
             if not allowed:
-                APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-                
+                return APIHelper.send_unauthorized_error(
+                    errorMessageKey='translations.UNAUTHORIZED'
+                )
 
-        # ✅ UPDATE DATA
+        #  UPDATE DATA
         update_data = update_case_request.dict(
             exclude_unset=True,
             exclude_none=True
@@ -174,7 +188,7 @@ class CaseController:
         return case
 
 
-    # ✅ SOFT DELETE
+    #  SOFT DELETE
     def soft_delete_case(case_id: int, user: UserModel, db: Session):
 
         if user is None or user.role != "lawyer":
@@ -187,10 +201,14 @@ class CaseController:
         ).first()
 
         if not lawyer:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
+            return APIHelper.send_not_found_error(
+                errorMessageKey='translations.LAWYER_NOT_FOUND'
+            )
 
         if lawyer.isBlocked == b'\x01':
-            raise HTTPException(status_code=403, detail="You are blocked")
+            return APIHelper.send_forbidden_error(
+                errorMessageKey='translations.BLOCKED'
+            )
 
         case = db.query(Cases).filter(
             Cases.id == case_id,
@@ -198,12 +216,15 @@ class CaseController:
         ).first()
 
         if not case:
-            raise HTTPException(status_code=404, detail="Case not found")
+            return APIHelper.send_not_found_error(
+                errorMessageKey='translations.CASE_NOT_FOUND'
+            )
 
         if case.lawyerId != lawyer.id:
-            raise HTTPException(status_code=403, detail="Not your case")
+            return APIHelper.send_forbidden_error(
+                errorMessageKey='translations.NOT_ALLOWED'
+            )
 
-        # ✅ SOFT DELETE FIXED
         case.isDeleted = b'\x01'
 
         db.commit()

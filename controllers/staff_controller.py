@@ -1,20 +1,10 @@
 # Importing libraries
-from typing import Optional
 from dtos.auth_models import UserModel
 from models.lawyers_table import Lawyers
 from helper.api_helper import APIHelper
 from models.staff_table import Staff
 from models.blockedStaff_table import BlockedStaff
-
-from fastapi import APIRouter, Depends
-from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.db_config import get_db
-from typing_extensions import Annotated
-from fastapi import APIRouter,Depends,HTTPException,Path
-from starlette import status 
-from helper.token_helper import TokenHelper
-from pydantic import Field
 from dtos.staff_models import StaffModel as CreateStaffRequest, UpdateStaffRequest
 
 
@@ -43,9 +33,9 @@ class StaffController:
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
         if lawyer.isBlocked == b'\x01':
-            raise HTTPException(status_code=403, detail="You are blocked")
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
 
         # filter staff by lawyerId
@@ -68,13 +58,13 @@ class StaffController:
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
 
         if staff_model is None:
-            raise HTTPException(status_code=404, detail="Document not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
         if lawyer.isBlocked == b'\x01':
-            raise HTTPException(status_code=403, detail="You are blocked")
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         if Staff.lawyerId==lawyer.id:
             update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
@@ -98,13 +88,13 @@ class StaffController:
 
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
         if staff_model is None:
-            raise HTTPException(status_code=404, detail="Document not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
         if lawyer.isBlocked == b'\x01':
-            raise HTTPException(status_code=403, detail="You are blocked")
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         if Staff.lawyerId==lawyer.id:
             Staff.delete(staff_model)
@@ -120,28 +110,24 @@ class StaffController:
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
-            raise HTTPException(status_code=404, detail="Lawyer not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
         if lawyer.isBlocked == b'\x01':
-            raise HTTPException(status_code=403, detail="You are blocked")
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-        # ✅ Get actual staff row
         staff = db.query(Staff).filter(Staff.id == client_id).first()
 
         if staff is None:
-            raise HTTPException(status_code=404, detail="Staff not found")
+            return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
 
-        # ✅ Correct check
         if staff.lawyerId != lawyer.id:
-            raise HTTPException(status_code=403, detail="Not allowed")
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ALLOWDED_TO_ACCESS_THIS_STAFF')
 
-        # ✅ Update
         staff.isBlocked = 1
 
         db.commit()
         db.refresh(staff)
 
-        # ✅ Add to blocked table
         blocked_entry = BlockedStaff(
             lawyerId=lawyer.id,
             staffId=client_id,

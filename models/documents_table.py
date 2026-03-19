@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey,Text
 from datetime import datetime
 from config.db_config import Base
 from datetime import datetime
@@ -8,7 +8,7 @@ class Documents(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
-    documentLink = Column(String, nullable=False)
+    documentLink = Column(Text, nullable=False)
     fileType = Column(String(50), nullable=False)
     description=Column(String(255), nullable=True)
     notes=Column(String(255), nullable=True)

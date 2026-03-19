@@ -12,7 +12,6 @@ from models.cases_table import Cases, CaseStatus
 from sqlalchemy import  func
 from models.tasks_table import Tasks, TaskStatus
 
-
 class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts
     def get_case_counts(user: UserModel,db: Session):

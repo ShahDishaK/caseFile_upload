@@ -33,3 +33,9 @@ class APIHelper:
             detail=(BaseErrorModel(error=i18n.t(
                 key=errorMessageKey or 'translations.FAILURE', locale=locale))).dict()
         )
+    def send_forbidden_error(errorMessageKey: Optional[str] = None, locale: Optional[str] = "en"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(BaseErrorModel(error=i18n.t(
+                key=errorMessageKey or 'translations.FAILURE', locale=locale))).dict()
+        )

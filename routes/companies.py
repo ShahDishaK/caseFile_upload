@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from starlette import status
-
 from config.db_config import get_db
 from helper.token_helper import TokenHelper
 from dtos.auth_models import UserModel

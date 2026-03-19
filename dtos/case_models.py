@@ -2,7 +2,6 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-
 class CaseModel(BaseModel):
     caseNumber :int
     title :str 

@@ -6,6 +6,7 @@ class UserRole(str, Enum):
     lawyer = "lawyer"
     admin = "admin"
     staff = "staff"
+    client="client"
 
 class UserModel(BaseModel):
     name: str
@@ -14,7 +15,8 @@ class UserModel(BaseModel):
     email: EmailStr
     phoneNumber: Optional[constr(regex="^[0-9]{10}$")]
     password: str
-    role: Optional[str]
+    role: str
+    gender:str
 
     @validator("role")
     def convert_role_to_lowercase(cls, value):
@@ -24,9 +26,6 @@ class UserModel(BaseModel):
     address: Optional[str] = None
     companyId:int
     
-
-   
-
 class TokenModel(BaseModel):
     access_token: str
     token_type: Optional[str] = 'Bearer'

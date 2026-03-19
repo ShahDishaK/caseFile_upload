@@ -1,7 +1,5 @@
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime
-
 
 class DocumentModel(BaseModel):
     title :str
@@ -11,7 +9,6 @@ class DocumentModel(BaseModel):
     notes: Optional[str] = None
     caseId :int
     clientId : Optional[int] = None
-
 
 class UpdateDocumentRequest(BaseModel):
     title: Optional[str] = None

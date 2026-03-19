@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from datetime import datetime
 from config.db_config import Base
 from datetime import datetime
-
 
 class Lawyers(Base):
     __tablename__ = "lawyers"

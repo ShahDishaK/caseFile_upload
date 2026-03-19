@@ -2,7 +2,7 @@
 from dotenv import load_dotenv
 from os.path import join, dirname
 from helper.cors_helper import CORSHelper
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from routes.users import router
 from routes.cases import case
 from routes.caseStatusHistory import caseStatus
@@ -14,10 +14,8 @@ from routes.courtSessions import session
 from routes.companies import company
 from routes.documents import document
 from routes.admin import admin
-from fastapi import APIRouter
 from routes.auth import auth
-from config.db_config import engine
-from models.users_table import Base
+from routes.invoices import invoice
 
 app = FastAPI()
 
@@ -38,6 +36,8 @@ app.include_router(session)
 app.include_router(company)
 app.include_router(lawyer)
 app.include_router(admin)
+app.include_router(invoice)
+
 
 
 
