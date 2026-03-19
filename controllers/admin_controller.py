@@ -22,17 +22,17 @@ class AdminController:
         
         open_cases = db.query(func.count(Cases.id)).filter(
             Cases.status == CaseStatus.open,
-            Cases.isDeleted == False
+            Cases.isDeleted == b'\x00'
         ).scalar()
         
         closed_cases = db.query(func.count(Cases.id)).filter(
             Cases.status == CaseStatus.closed,
-            Cases.isDeleted == False
+            Cases.isDeleted == b'\x00'
         ).scalar()
         
         new_cases = db.query(func.count(Cases.id)).filter(
             Cases.createdAt >= thirty_days_ago,
-            Cases.isDeleted == False
+            Cases.isDeleted ==b'\x00'
         ).scalar()
 
         return {

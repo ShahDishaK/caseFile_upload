@@ -10,6 +10,7 @@ from models.lawyers_table import Lawyers
 from helper.api_helper import APIHelper
 import os
 from dotenv import load_dotenv
+import json
 
 
 load_dotenv()
@@ -28,7 +29,7 @@ class InvoiceController:
         if not lawyer:
             return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
 
-        if lawyer.isBlocked:
+        if lawyer.isBlocked==b'\x01':
             return APIHelper.send_forbidden_error('translations.BLOCKED')
 
         invoice = Invoices(
@@ -93,7 +94,6 @@ class InvoiceController:
 
     # ================= STRIPE WEBHOOK =================
     def handle_stripe_webhook(request: Request, db: Session):
-        import json
 
         payload = None
         try:
@@ -102,7 +102,7 @@ class InvoiceController:
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid payload")
 
-        # ✅ PAYMENT SUCCESS
+        #  PAYMENT SUCCESS
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
 
@@ -142,7 +142,7 @@ class InvoiceController:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
             if not lawyer:
                 return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-            if lawyer.isBlocked:
+            if lawyer.isBlocked==b'\x01':
                 return APIHelper.send_forbidden_error('translations.BLOCKED')
 
             query = db.query(Invoices).filter(Invoices.lawyerId == lawyer.id)
@@ -170,7 +170,7 @@ class InvoiceController:
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
             return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked:
+        if lawyer.isBlocked==b'\x01':
             return APIHelper.send_forbidden_error('translations.BLOCKED')
 
         invoice = db.query(Invoices).filter(Invoices.id == invoice_id).first()
@@ -201,7 +201,7 @@ class InvoiceController:
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
             return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked:
+        if lawyer.isBlocked==b'\x01':
             return APIHelper.send_forbidden_error('translations.BLOCKED')
 
         invoice = db.query(Invoices).filter(Invoices.id == invoice_id).first()

@@ -66,7 +66,7 @@ class StaffController:
         if lawyer.isBlocked == b'\x01':
             return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-        if Staff.lawyerId==lawyer.id:
+        if Staff.lawyerId!=lawyer.id:
             update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
 
             for key, value in update_data.items():

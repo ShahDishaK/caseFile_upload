@@ -28,11 +28,7 @@ async def update_invoice(invoice_id: int,update_invoice_request: UpdateInvoiceRe
 async def delete_invoice(invoice_id: int, user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
         return InvoiceController.delete_invoice(invoice_id,user,db)
 
-@invoice.put("/invoice/{invoice_id}/", status_code=status.HTTP_200_OK)
-async def pay_invoice(invoice_id: int, user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-        return InvoiceController.pay_invoice(invoice_id,user,db)
-
-@invoice.put("/invoice/", status_code=status.HTTP_200_OK)
+@invoice.get("/invoice/", status_code=status.HTTP_200_OK)
 async def get_admin_invoice_totals(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
         return InvoiceController.get_admin_invoice_totals(user,db)
    
