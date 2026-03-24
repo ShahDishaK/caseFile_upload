@@ -1,6 +1,17 @@
+from enum import Enum
 from typing import Optional
 from decimal import Decimal
 from pydantic import BaseModel
+
+class InvoiceStatus(str, Enum):
+    pending = "pending"
+    paid = "paid"
+
+
+class PaymentStatus(str, Enum):
+    pending = "pending"
+    success = "success"
+    failed = "failed"
 
 class InvoiceModel(BaseModel):
     totalHours: Decimal
@@ -8,7 +19,7 @@ class InvoiceModel(BaseModel):
     clientId: int
     caseId: int
     companyId: int
-    status: str
+    status: InvoiceStatus
     
 class UpdateInvoiceRequest(BaseModel):
     totalHours: Optional[Decimal] = None

@@ -11,6 +11,14 @@ from datetime import datetime, timedelta
 from models.cases_table import Cases, CaseStatus
 from sqlalchemy import  func
 from models.tasks_table import Tasks, TaskStatus
+import os
+import i18n
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
 
 class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts

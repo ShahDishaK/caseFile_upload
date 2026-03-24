@@ -1,6 +1,6 @@
 from controllers.invoice_controller import InvoiceController
 from dtos.invoice_models import InvoiceModel as CreateInvoiceRequest, UpdateInvoiceRequest
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends , Request
 from sqlalchemy.orm import Session
 from starlette import status
 from config.db_config import get_db
@@ -32,4 +32,18 @@ async def delete_invoice(invoice_id: int, user: UserModel = Depends(TokenHelper.
 async def get_admin_invoice_totals(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
         return InvoiceController.get_admin_invoice_totals(user,db)
    
+@invoice.post("/{invoice_id}/pay")
+def create_payment_session(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(TokenHelper.get_current_user)
+):
+    return InvoiceController.create_payment_session(invoice_id, user, db)
+
+@invoice.post("/webhook")
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    return InvoiceController.handle_stripe_webhook(request, db)
     

@@ -11,16 +11,37 @@ from dtos.document_models import DocumentModel as CreateDocumentRequest, UpdateD
 import base64
 import requests
 import os
+import i18n
+from fastapi import UploadFile, File
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
+
+import base64
+from fastapi import HTTPException
 
 class DocumentController:
 
-    #  CREATE DOCUMENT
-    def create_document(create_document_request: CreateDocumentRequest, user: UserModel, db: Session):
+    
+    async def create_document(
+        title,
+        fileType,
+        description,
+        notes,
+        caseId,
+        clientId,
+        file,
+        user,
+        db
+    ):
 
         if user is None or user.role not in ['lawyer', 'staff']:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-        #  LAWYER CHECK
+        # 👨‍⚖️ LAWYER CHECK
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -30,51 +51,36 @@ class DocumentController:
             if lawyer.isBlocked == b'\x01':
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-        #  STAFF CHECK
+        # 👨‍💼 STAFF CHECK
         else:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
-                Staff.caseId == create_document_request.caseId,
-                Staff.isBlocked ==b'\x00'
+                Staff.caseId == caseId,
+                Staff.isBlocked == b'\x00'
             ).first()
 
             if staff is None:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_THIS_DOCUMENT')
-                
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED'
+                )
 
-
-        base64_content = None
-        doc_link = create_document_request.documentLink
-
+        # 📄 FILE → BASE64
         try:
-            if doc_link.startswith("http://") or doc_link.startswith("https://"):
-                # Fetch file from URL
-                response = requests.get(doc_link)
-                if response.status_code == 200:
-                    base64_content = base64.b64encode(response.content).decode('utf-8')
-                else:
-                    raise HTTPException(status_code=400, detail="Cannot fetch document from the link")
-            else:
-                # Local file path
-                if not os.path.isfile(doc_link):
-                    raise HTTPException(status_code=400, detail="Local file not found")
-                
-                with open(doc_link, "rb") as f:
-                    base64_content = base64.b64encode(f.read()).decode('utf-8')
-        
+            file_content = await file.read()
+            base64_content = base64.b64encode(file_content).decode("utf-8")
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Error converting document to Base64: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Error converting file: {str(e)}")
 
-        # 🔹 Save document in DB
+        # 💾 SAVE
         document = Documents(
-            title=create_document_request.title,
-            documentLink=base64_content,  # store Base64
-            fileType=create_document_request.fileType,
-            description=create_document_request.description,
-            notes=create_document_request.notes,
-            caseId=create_document_request.caseId,
+            title=title,
+            documentLink=base64_content,
+            fileType=fileType,
+            description=description,
+            notes=notes,
+            caseId=caseId,
             userId=user.id,
-            clientId=create_document_request.clientId
+            clientId=clientId
         )
 
         db.add(document)
@@ -127,7 +133,18 @@ class DocumentController:
 
 
     #  UPDATE DOCUMENT
-    def update_document(document_id: int, update_document_request: UpdateDocumentRequest, user: UserModel, db: Session):
+    async def update_document(
+    document_id,
+    title,
+    fileType,
+    description,
+    notes,
+    caseId,
+    clientId,
+    file,
+    user,
+    db
+):
 
         if user is None or user.role not in ['lawyer', 'staff']:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
@@ -137,7 +154,7 @@ class DocumentController:
         if document is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
 
-        #  LAWYER
+        # 👨‍⚖️ LAWYER CHECK
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -147,12 +164,7 @@ class DocumentController:
             if lawyer.isBlocked == b'\x01':
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-            case = db.query(Cases).filter(Cases.id == document.caseId).first()
-
-            if case.lawyerId != lawyer.id:
-                return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-
-        #  STAFF
+        # 👨‍💼 STAFF CHECK
         else:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
@@ -161,14 +173,36 @@ class DocumentController:
             ).first()
 
             if staff is None:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_DOCUMENT')
-                
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_DOCUMENT'
+                )
 
-        #  UPDATE
-        update_data = update_document_request.dict(exclude_unset=True, exclude_none=True)
+        # 📄 FILE UPDATE (ONLY IF PROVIDED)
+        if file:
+            try:
+                file_content = await file.read()
+                document.documentLink = base64.b64encode(file_content).decode("utf-8")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Error converting file: {str(e)}")
 
-        for key, value in update_data.items():
-            setattr(document, key, value)
+        # 🔄 FIELD UPDATES (ONLY IF PROVIDED)
+        if title is not None:
+            document.title = title
+
+        if fileType is not None:
+            document.fileType = fileType
+
+        if description is not None:
+            document.description = description
+
+        if notes is not None:
+            document.notes = notes
+
+        if caseId is not None:
+            document.caseId = caseId
+
+        if clientId is not None:
+            document.clientId = clientId
 
         db.commit()
         db.refresh(document)

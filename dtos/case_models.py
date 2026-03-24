@@ -1,13 +1,19 @@
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
+from enum import Enum
+
+class CaseStatus(str, Enum):
+    closed = "closed"
+    open = "open"
+
 
 class CaseModel(BaseModel):
     caseNumber :int
     title :str 
     type:str
     description : str
-    status: str
+    status: CaseStatus
     caseClosedDate: Optional[datetime] = None
     caseStage:str
     caseCity:str
@@ -19,7 +25,7 @@ class UpdateCaseRequest(BaseModel):
     type: Optional[str] = None
     description: Optional[str] = None
     staffId: Optional[int] = None
-    status: Optional[str] = None
+    status: Optional[CaseStatus] = None
     caseCloseDate: Optional[datetime] = None
     clientId: Optional[int] = None
     lawyerId: Optional[int] = None

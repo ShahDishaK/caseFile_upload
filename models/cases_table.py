@@ -14,7 +14,7 @@ class Cases(Base):
     __tablename__   ="cases"
 
     id = Column(Integer, primary_key=True, index=True)
-    caseNumber = Column(Integer, nullable=False)
+    caseNumber = Column(Integer, nullable=False,unique=True)
     title = Column(String(255), nullable=False)
     type=Column(String(40),nullable=False)
     description = Column(String(255), nullable=False)

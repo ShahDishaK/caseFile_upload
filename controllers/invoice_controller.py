@@ -1,3 +1,4 @@
+from models.clients_table import Clients
 import stripe
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -11,6 +12,14 @@ from helper.api_helper import APIHelper
 import os
 from dotenv import load_dotenv
 import json
+import os
+import i18n
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
 
 
 load_dotenv()
@@ -56,7 +65,7 @@ class InvoiceController:
 
         invoice = db.query(Invoices).filter(
             Invoices.id == invoice_id,
-            Invoices.clientId == user.id
+            Invoices.clientId == Clients.id
         ).first()
 
         if not invoice:
@@ -93,11 +102,11 @@ class InvoiceController:
             raise HTTPException(status_code=500, detail=str(e))
 
     # ================= STRIPE WEBHOOK =================
-    def handle_stripe_webhook(request: Request, db: Session):
+    async def handle_stripe_webhook(request: Request, db: Session):
 
         payload = None
         try:
-            payload = request.body()
+            payload = await request.body()
             event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid payload")

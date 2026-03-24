@@ -3,13 +3,25 @@ from dtos.auth_models import UserModel
 from models.staff_table import Staff
 from models.lawyers_table import Lawyers
 from models.cases_table import Cases
+from models.caseStatusHistory_table import CaseStatusHistories
 from helper.api_helper import APIHelper
 from sqlalchemy.orm import Session
+from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
+import os
+import i18n
+from sqlalchemy.exc import SQLAlchemyError
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
+
 
 class CaseController:
 
     #  CREATE CASE
-    def create_case(create_case_request, user: UserModel, db: Session):
+    def create_case(create_case_request:CreateCaseRequest, user: UserModel, db: Session):
 
         if user is None or user.role != 'lawyer':
             return APIHelper.send_unauthorized_error(
@@ -30,26 +42,31 @@ class CaseController:
             return APIHelper.send_forbidden_error(
                 errorMessageKey='translations.BLOCKED'
             )
+        try:
+            case = Cases(
+                caseNumber=create_case_request.caseNumber,
+                title=create_case_request.title,
+                type=create_case_request.type,
+                description=create_case_request.description,
+                lawyerId=lawyer.id,
+                caseStage=create_case_request.caseStage,
+                caseCity=create_case_request.caseCity,
+                status=create_case_request.status,
+                caseClosedDate=create_case_request.caseClosedDate,
+                clientId=create_case_request.clientId,
+                isDeleted=b'\x00'
+            )
 
-        case = Cases(
-            caseNumber=create_case_request.caseNumber,
-            title=create_case_request.title,
-            type=create_case_request.type,
-            description=create_case_request.description,
-            lawyerId=lawyer.id,
-            caseStage=create_case_request.caseStage,
-            caseCity=create_case_request.caseCity,
-            status=create_case_request.status,
-            caseClosedDate=create_case_request.caseClosedDate,
-            clientId=create_case_request.clientId,
-            isDeleted=b'\x00'
-        )
+            db.add(case)
+            db.commit()
+            db.refresh(case)
 
-        db.add(case)
-        db.commit()
-        db.refresh(case)
-
-        return case
+            return case
+        except SQLAlchemyError as e:
+            db.rollback()  # VERY IMPORTANT
+            return APIHelper.send_internal_server_error(
+                errorMessageKey='translations.DB_ERROR'
+            )
 
 
     #  READ ALL CASES
@@ -117,7 +134,7 @@ class CaseController:
 
 
     #  UPDATE CASE
-    def update_case(case_id: int, update_case_request, user: UserModel, db: Session):
+    def update_case(case_id: int, update_case_request:UpdateCaseRequest, user: UserModel, db: Session):
 
         if user is None or user.role not in ['lawyer', 'staff']:
             return APIHelper.send_unauthorized_error(
@@ -154,7 +171,7 @@ class CaseController:
 
             if case.lawyerId != lawyer.id:
                 return APIHelper.send_forbidden_error(
-                    errorMessageKey='translations.NOT_ALLOWED'
+                    errorMessageKey='translations.NOT_ALLOWED_TO_ACCESS_THIS_CASE'
                 )
 
         # ================= STAFF =================
@@ -174,6 +191,8 @@ class CaseController:
                 )
 
         #  UPDATE DATA
+        old_status = case.status
+
         update_data = update_case_request.dict(
             exclude_unset=True,
             exclude_none=True
@@ -181,6 +200,16 @@ class CaseController:
 
         for key, value in update_data.items():
             setattr(case, key, value)
+
+        new_status = case.status
+
+        if "status" in update_data and old_status != new_status:
+            history = CaseStatusHistories(
+                caseId=case.id,
+                oldStatus=old_status,
+                newStatus=new_status,
+                                        )
+            db.add(history)
 
         db.commit()
         db.refresh(case)

@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, constr
 
 class UserVerification(BaseModel):
     password: str
-    new_password: str = Field(min_length=6)
+    new_password: str = Field(min_length=3)
 
 class ForgotPassword(BaseModel):
     email:str

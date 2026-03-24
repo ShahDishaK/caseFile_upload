@@ -6,6 +6,14 @@ from models.lawyers_table import Lawyers
 from models.tasks_table import Tasks
 from sqlalchemy.orm import Session
 from dtos.task_models import TaskModel as CreateTaskRequest, UpdateTaskRequest
+import os
+import i18n
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
 
 class TaskController:
     def create_task(create_task_request: CreateTaskRequest,user: UserModel,db: Session):
@@ -21,6 +29,7 @@ class TaskController:
         )
         db.add(create_document_model)
         db.commit()
+        return create_document_model
 
     def read_all(user: UserModel,db: Session ):
         if user is None or user.role not in ['lawyer', 'staff']:
@@ -93,6 +102,8 @@ class TaskController:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
         task_model = db.query(Tasks).filter(Tasks.id == task_id).first()
+        if not task_model:
+            return APIHelper.send_not_found_error(errorMessageKey='translations.TASK_NOT_FOUND')
         if task_model.assignedTo==user.id:
 
             if task_model is None:

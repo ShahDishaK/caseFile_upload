@@ -8,7 +8,7 @@ from enum import Enum
 class CaseStatus(str, Enum):
     closed = "closed"
     open = "open"
-    pending="pending"
+    
 
 class CaseStatusHistories(Base):
     __tablename__="caseStatusHistories"

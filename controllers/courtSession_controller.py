@@ -6,6 +6,14 @@ from models.courtSession_table import CourtSessions
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from dtos.courtsession_models import SessionModel as CreatSessionRequest
+import os
+import i18n
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
 
 class CourtSessionController:
 
@@ -24,6 +32,7 @@ class CourtSessionController:
         )
         db.add(create_session_model)
         db.commit()
+        return create_session_model
 
     def read_all(user: UserModel ,db: Session ):
         if user is None or user.role !='lawyer':

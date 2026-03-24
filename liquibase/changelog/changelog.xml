@@ -1018,4 +1018,21 @@
 
 </changeSet>
 
+<changeSet id="4-make-name-nullable" author="disha">
+
+    <dropNotNullConstraint
+            tableName="users"
+            columnName="name"
+            columnDataType="VARCHAR(255)"/>
+
+</changeSet>
+
+<changeSet id="18-add-unique-caseNumber-cases" author="disha">
+
+    <addUniqueConstraint
+        tableName="cases"
+        columnNames="caseNumber"/>
+
+</changeSet>
+
 </databaseChangeLog>

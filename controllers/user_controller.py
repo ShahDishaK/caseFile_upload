@@ -7,6 +7,14 @@ from models.users_table import User
 from fastapi import HTTPException
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
+import os
+import i18n
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
 
 
 SECREAT_KEY='342e33d140d858d4eb74ae725b7d3a0fe4aa8dade3f6f435fae690b92b6f3001'
