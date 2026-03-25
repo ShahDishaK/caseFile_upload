@@ -8,7 +8,6 @@ from typing_extensions import Annotated
 from fastapi import APIRouter,Depends
 from starlette import status 
 from helper.token_helper import TokenHelper
-from dtos.document_models import DocumentModel as CreateDocumentRequest, UpdateDocumentRequest
 from controllers.document_controller import DocumentController
 from fastapi import APIRouter, Depends, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
@@ -51,10 +50,6 @@ async def create_document(
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     return DocumentController.read_all(user,db)
 
-# @document.post("/document", status_code=status.HTTP_201_CREATED)
-# async def create_document(create_document_request: CreateDocumentRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
-#     return DocumentController.create_document(create_document_request,user,db)
-
 @document.patch("/document/{document_id}", status_code=status.HTTP_200_OK)
 async def update_document(
     document_id: int,
@@ -66,7 +61,7 @@ async def update_document(
     caseId: int = Form(None),
     clientId: int = Form(None),
 
-    file: UploadFile = File(None),  # 👈 optional file
+    file: UploadFile = File(None),
 
     user: UserModel = Depends(TokenHelper.get_current_user),
     db: Session = Depends(get_db)

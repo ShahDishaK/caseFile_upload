@@ -7,7 +7,6 @@ from models.documents_table import Documents
 from models.cases_table import Cases
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from dtos.document_models import DocumentModel as CreateDocumentRequest, UpdateDocumentRequest
 import base64
 import requests
 from fastapi import UploadFile, File
