@@ -6,14 +6,6 @@ from helper.token_helper import TokenHelper
 from helper.api_helper import APIHelper
 from dtos.auth_models import UserModel as CreateUserRequest
 from helper.validation_helper import ValidationHelper
-import os
-import i18n
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
 
 # auth= APIRouter(prefix='/auth',tags=['Auth'])
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

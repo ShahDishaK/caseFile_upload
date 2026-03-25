@@ -41,7 +41,7 @@ class APIHelper:
         )
     def send_internal_server_error(errorMessageKey: Optional[str] = None, locale: Optional[str] = "en"):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=(BaseErrorModel(error=i18n.t(
                 key=errorMessageKey or 'translations.FAILURE', locale=locale))).dict()
         )

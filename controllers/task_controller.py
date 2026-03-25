@@ -6,14 +6,6 @@ from models.lawyers_table import Lawyers
 from models.tasks_table import Tasks
 from sqlalchemy.orm import Session
 from dtos.task_models import TaskModel as CreateTaskRequest, UpdateTaskRequest
-import os
-import i18n
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
 
 class TaskController:
     def create_task(create_task_request: CreateTaskRequest,user: UserModel,db: Session):
@@ -51,7 +43,7 @@ class TaskController:
         
         elif user.role=='staff':
             staff = db.query(Staff).filter(
-                staff.userId == user.id
+                Staff.user_id == user.id
             ).first()
 
             if not staff:

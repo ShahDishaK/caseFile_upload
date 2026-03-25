@@ -7,16 +7,7 @@ from models.caseStatusHistory_table import CaseStatusHistories
 from helper.api_helper import APIHelper
 from sqlalchemy.orm import Session
 from dtos.case_models import CaseModel as CreateCaseRequest, UpdateCaseRequest
-import os
-import i18n
 from sqlalchemy.exc import SQLAlchemyError
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
-
 
 class CaseController:
 

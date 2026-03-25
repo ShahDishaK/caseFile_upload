@@ -40,10 +40,9 @@ def create_payment_session(
 ):
     return InvoiceController.create_payment_session(invoice_id, user, db)
 
-@invoice.post("/webhook")
+@invoice.post("/stripe/webhook")
 async def stripe_webhook(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    return InvoiceController.handle_stripe_webhook(request, db)
-    
+    return await InvoiceController.handle_stripe_webhook(request, db)

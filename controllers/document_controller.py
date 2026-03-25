@@ -10,22 +10,12 @@ from fastapi import HTTPException
 from dtos.document_models import DocumentModel as CreateDocumentRequest, UpdateDocumentRequest
 import base64
 import requests
-import os
-import i18n
 from fastapi import UploadFile, File
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
-
 import base64
 from fastapi import HTTPException
 
 class DocumentController:
 
-    
     async def create_document(
         title,
         fileType,
@@ -41,7 +31,7 @@ class DocumentController:
         if user is None or user.role not in ['lawyer', 'staff']:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-        # 👨‍⚖️ LAWYER CHECK
+        #  LAWYER CHECK
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -51,7 +41,7 @@ class DocumentController:
             if lawyer.isBlocked == b'\x01':
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-        # 👨‍💼 STAFF CHECK
+        #  STAFF CHECK
         else:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
@@ -64,14 +54,14 @@ class DocumentController:
                     errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED'
                 )
 
-        # 📄 FILE → BASE64
+        #  FILE → BASE64
         try:
             file_content = await file.read()
             base64_content = base64.b64encode(file_content).decode("utf-8")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error converting file: {str(e)}")
 
-        # 💾 SAVE
+        # SAVE
         document = Documents(
             title=title,
             documentLink=base64_content,
@@ -154,7 +144,7 @@ class DocumentController:
         if document is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
 
-        # 👨‍⚖️ LAWYER CHECK
+        # LAWYER CHECK
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -164,7 +154,7 @@ class DocumentController:
             if lawyer.isBlocked == b'\x01':
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-        # 👨‍💼 STAFF CHECK
+        #  STAFF CHECK
         else:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
@@ -177,7 +167,7 @@ class DocumentController:
                     errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_DOCUMENT'
                 )
 
-        # 📄 FILE UPDATE (ONLY IF PROVIDED)
+        #  FILE UPDATE (ONLY IF PROVIDED)
         if file:
             try:
                 file_content = await file.read()
@@ -185,7 +175,7 @@ class DocumentController:
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Error converting file: {str(e)}")
 
-        # 🔄 FIELD UPDATES (ONLY IF PROVIDED)
+        # FIELD UPDATES (ONLY IF PROVIDED)
         if title is not None:
             document.title = title
 

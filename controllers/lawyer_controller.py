@@ -5,16 +5,7 @@ from helper.api_helper import APIHelper
 from sqlalchemy.orm import Session
 from models.lawyers_table import Lawyers
 from dtos.lawyer_models import LawyerModel as CreateLawyerRequest, UpdateLawyerRequest
-import os
-import i18n
 from sqlalchemy.exc import SQLAlchemyError
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
-
 
 class LawyerController:
 
@@ -147,3 +138,4 @@ class LawyerController:
         db.commit()
 
         return APIHelper.send_success_response(successMessageKey='translations.SUCCESS')
+    

@@ -16,6 +16,15 @@ from routes.documents import document
 from routes.admin import admin
 from routes.auth import auth
 from routes.invoices import invoice
+import os
+import i18n
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+i18n.load_path.append(os.path.join(BASE_DIR, 'fastapi/language'))
+i18n.set('filename_format', '{namespace}.{locale}.{format}')
+i18n.set('fallback', 'en')
+i18n.set('locale', 'en')
+
 
 app = FastAPI()
 

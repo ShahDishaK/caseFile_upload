@@ -12,15 +12,6 @@ from helper.api_helper import APIHelper
 import os
 from dotenv import load_dotenv
 import json
-import os
-import i18n
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
-
 
 load_dotenv()
 key=os.getenv("STRIPE_API_KEY")
@@ -85,8 +76,8 @@ class InvoiceController:
                     "quantity": 1,
                 }],
                 mode="payment",
-                success_url="http://localhost:3000/success",
-                cancel_url="http://localhost:3000/cancel",
+                success_url="http://localhost:5173/invoice",
+                cancel_url="http://localhost:5173/invoice",
                 metadata={
                     "invoice_id": str(invoice.id)
                 }
@@ -103,11 +94,15 @@ class InvoiceController:
 
     # ================= STRIPE WEBHOOK =================
     async def handle_stripe_webhook(request: Request, db: Session):
-
         payload = None
         try:
             payload = await request.body()
-            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
+            sig_header = request.headers.get("stripe-signature")
+
+            event = stripe.Webhook.construct_event(
+                payload,
+                sig_header,
+                os.getenv("STRIPE_WEBHOOK_SECRET"))
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid payload")
 
@@ -157,7 +152,8 @@ class InvoiceController:
             query = db.query(Invoices).filter(Invoices.lawyerId == lawyer.id)
 
         elif user.role == UserRole.CLIENT:
-            query = db.query(Invoices).filter(Invoices.clientId == user.id)
+            client = db.query(Clients).filter(Clients.userId == user.id).first()
+            query = db.query(Invoices).filter(Invoices.clientId == client.id)
 
         else:
             query = db.query(Invoices)

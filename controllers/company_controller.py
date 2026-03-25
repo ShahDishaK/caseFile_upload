@@ -3,14 +3,6 @@ from helper.api_helper import APIHelper
 from models.companies_table import Companies
 from dtos.company_models import CompanyModel, UpdateCompanyRequest
 from dtos.auth_models import UserModel
-import os
-import i18n
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
 
 class CompanyController:
 

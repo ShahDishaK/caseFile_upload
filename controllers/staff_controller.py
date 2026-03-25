@@ -7,15 +7,6 @@ from models.staff_table import Staff
 from models.blockedStaff_table import BlockedStaff
 from sqlalchemy.orm import Session
 from dtos.staff_models import StaffModel as CreateStaffRequest, UpdateStaffRequest
-import os
-import i18n
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
-
 
 class StaffController:
     def create_staff(create_staff_request: CreateStaffRequest,user: UserModel,db: Session):
@@ -89,7 +80,7 @@ class StaffController:
     ):
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
 
-        if user is None or user.role !='lawyer' or staff_id.user_id!=user.id:
+        if user is None or user.role !='lawyer':
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
 
@@ -102,7 +93,7 @@ class StaffController:
         if lawyer.isBlocked == b'\x01':
             return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
-        if Staff.lawyerId==lawyer.id:
+        if staff_model.lawyerId==lawyer.id:
             update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
 
             for key, value in update_data.items():
@@ -110,7 +101,7 @@ class StaffController:
                     setattr(staff_model, key, value)
             
             #  Update user fields
-            user_model = db.query(User).filter(User.id == staff_model.userId).first()
+            user_model = db.query(User).filter(User.id == staff_model.user_id).first()
 
             if user_model:
                 if update_staff_request.name:

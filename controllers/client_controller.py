@@ -7,14 +7,6 @@ from models.lawyers_table import Lawyers
 from helper.api_helper import APIHelper
 from sqlalchemy.orm import Session
 from dtos.client_models import ClientModel as CreateClientRequest, UpdateClientRequest
-import os
-import i18n
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-i18n.load_path.append(os.path.join(BASE_DIR, 'language'))
-i18n.set('filename_format', '{namespace}.{locale}.{format}')
-i18n.set('fallback', 'en')
-i18n.set('locale', 'en')
 
 class ClientController:
 
@@ -79,7 +71,7 @@ class ClientController:
                 User, Clients.userId == User.id
             ).filter(
                 Clients.lawyerId == lawyer.id,
-                Clients.isDeleted == 0
+                Clients.isDeleted == 0,
             ).all()
 
             return [
