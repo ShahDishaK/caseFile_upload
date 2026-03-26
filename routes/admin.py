@@ -1,0 +1,29 @@
+from dtos.auth_models import UserModel
+from fastapi import APIRouter, Depends
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from config.db_config import get_db
+from fastapi import APIRouter,Depends
+from helper.token_helper import TokenHelper
+from controllers.admin_controller import AdminController
+
+admin=APIRouter(
+    prefix='/admins',
+    tags=['dashboard']
+)
+
+@admin.get("/dashboard/case_counts")
+async def case_counts(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.get_case_counts(user,db)
+
+@admin.get("/dashboard/status_counts")
+async def get_case_status_count(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.get_case_status_count(user,db)
+
+@admin.get("/dashboard/task_counts")
+async def task_counts(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.task_counts(user,db)
+
+@admin.get("/dashboard/employees/{company_id}")
+async def comapny_users(company_id:int,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.company_users(company_id,user,db)
