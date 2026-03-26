@@ -15,5 +15,6 @@ class Documents(Base):
     caseId=Column(Integer,ForeignKey('cases.id'), nullable=True)
     userId=Column(Integer,ForeignKey('users.id'), nullable=False)
     clientId=Column(Integer,ForeignKey('clients.id'), nullable=True)
+    isDeleted=Column(Integer,nullable=False,default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

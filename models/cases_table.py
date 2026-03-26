@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer,Date, String, DateTime, ForeignKey, Enum as SQLEnum
 from datetime import datetime
 from config.db_config import Base
 from datetime import datetime
@@ -21,7 +21,7 @@ class Cases(Base):
     caseStage=Column(String(50), nullable=False)
     caseCity=Column(String(50), nullable=False)
     status=Column(SQLEnum(CaseStatus), nullable=False)   
-    caseClosedDate=Column(DateTime, nullable=True,default=None)
+    caseClosedDate=Column(Date, nullable=True,default=None)
     clientId=Column(Integer, ForeignKey('clients.id'), nullable=True)
     lawyerId=Column(Integer, ForeignKey('lawyers.id'), nullable=True)
     isDeleted=Column(Integer, default=0)

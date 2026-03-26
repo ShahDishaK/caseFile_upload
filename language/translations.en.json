@@ -16,6 +16,7 @@
     "DOCUMENT_NOT_FOUND":"can not find the document",
     "FORBIDDEN":"not allowded",
     "BLOCKED":"Your account is blocked",
+    "BLOCKED_OR_DELETED":"blocked or deleted",
     "NOT_ASSIGNED_TO_THIS_TASK":"You are not assigned to this task",
     "NOT_ALLOWDED_TO_ACCESS_THIS_STAFF":"You are not allowded to access this staff",
     "NOT_ALLOWDED_TO_ACCESS_THIS_CLIENT":"You are not allowded to access this client",
@@ -25,7 +26,8 @@
     "BLOCKED_OR_NOT_ASSIGNED_TO_LAWYER":"you are blocked or not assigned to this lawyer",
     "BLOCKED_OR_NOT_ASSIGENED_TO_HISTORY":"you are blocked or not assigned to this history",
     "NO_ACCESS_TO_THIS_DOCUMENT":"you don't have access to this document",
-    "DB_ERROR":"database unique key or integrity failed"
+    "DB_ERROR":"database unique key or integrity failed",
+    "INVOICE_ALREADY_PAID":"This invoice is already paid"
 
   }
 }

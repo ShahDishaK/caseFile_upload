@@ -19,7 +19,6 @@ class InvoiceModel(BaseModel):
     clientId: int
     caseId: int
     companyId: int
-    status: InvoiceStatus
     
 class UpdateInvoiceRequest(BaseModel):
     totalHours: Optional[Decimal] = None

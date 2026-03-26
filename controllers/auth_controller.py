@@ -12,15 +12,6 @@ bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 class AuthController:
-    def create_user(create_user_request: CreateUserRequest, db: Session ):
-        create_user_model = User(
-            email=create_user_request.email,
-            password=bcrypt_context.hash(create_user_request.password),
-            companyId=create_user_request.companyId
-        )
-        db.add(create_user_model)
-        db.commit()
-        return {"UserId is":create_user_model.id}
     
     def login_for_access_token(
         form_data: OAuth2PasswordRequestForm ,

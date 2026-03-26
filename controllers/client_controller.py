@@ -7,34 +7,48 @@ from models.lawyers_table import Lawyers
 from helper.api_helper import APIHelper
 from sqlalchemy.orm import Session
 from dtos.client_models import ClientModel as CreateClientRequest, UpdateClientRequest
+from helper.hashing import Hash
+from models.cases_table import Cases
+from models.documents_table import Documents
+from models.tasks_table import Tasks
+from models.caseStatusHistory_table import CaseStatusHistories
+from models.courtSession_table import CourtSessions
+from models.invoices_table import Invoices
+
 
 class ClientController:
 
     def create_client(create_client_request: CreateClientRequest, user: UserModel, db: Session):
         print(user.role)
-        if user is None or user.role != 'lawyer':
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if lawyer is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-        if lawyer.isBlocked == b'\x01':
+        if lawyer.isBlocked == 1:
             return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
-        #  Step 1: Get existing user
-        user_model = db.query(User).filter(User.id == create_client_request.userId).first()
-
-        if user_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.USER_NOT_FOUND')
-
+        
         #  Step 2: Update user details
-        user_model.name = create_client_request.name
-        user_model.firstName = create_client_request.firstName
-        user_model.lastName = create_client_request.lastName
-        user_model.phoneNumber = create_client_request.phoneNumber
-        user_model.address = create_client_request.address
-        user_model.gender = create_client_request.gender
-        user_model.role = 'client'
+        user_model = User(
+                name=create_client_request.name,
+                firstName=create_client_request.firstName,
+                lastName=create_client_request.lastName,
+                phoneNumber=create_client_request.phoneNumber,
+                address=create_client_request.address,
+                gender=create_client_request.gender,
+                email=create_client_request.email,
+                password=Hash.get_hash(create_client_request.password),
+                companyId=create_client_request.companyId,
+                role='client'
+            )
+
+        db.add(user_model)
+        db.commit()        
+        db.refresh(user_model)  
 
         client = Clients(
             crNumber=create_client_request.crNumber,
@@ -42,9 +56,7 @@ class ClientController:
             vatPercentage=create_client_request.vatPercentage,
             occupation=create_client_request.occupation,
             lawyerId=lawyer.id,
-            userId=create_client_request.userId,
-            isDeleted=0,
-            isBlocked=b'\x00'  # not blocked initially
+            userId=user_model.id,
         )
 
         db.add(client)
@@ -54,8 +66,10 @@ class ClientController:
 
     def read_all(user: UserModel, db: Session):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None :
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         #  LAWYER
         if user.role == 'lawyer':
@@ -63,7 +77,7 @@ class ClientController:
             if lawyer is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            if lawyer.isBlocked == b'\x01':
+            if lawyer.isBlocked ==1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
 
@@ -72,6 +86,7 @@ class ClientController:
             ).filter(
                 Clients.lawyerId == lawyer.id,
                 Clients.isDeleted == 0,
+                Clients.isBlocked==0
             ).all()
 
             return [
@@ -90,9 +105,9 @@ class ClientController:
                 Staff, Staff.lawyerId == Clients.lawyerId
             ).filter(
                 Staff.user_id == user.id,
-                Staff.isBlocked == b'\x00',
+                Staff.isBlocked == 0,
                 Clients.isDeleted == 0,
-                Clients.isBlocked == b'\x00'
+                Clients.isBlocked ==0
             ).all()
 
             if not clients:
@@ -111,19 +126,23 @@ class ClientController:
     #  UPDATE CLIENT
     def update_client(client_id: int, update_client_request: UpdateClientRequest, user: UserModel, db: Session):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         client = db.query(Clients).filter(Clients.id == client_id).first()
         if client is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.CLIENT_NOT_FOUND')
+        if client.isDeleted==1 or client.isBlocked==1:
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_DELETED')
 
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
             if lawyer is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-            if lawyer.isBlocked == b'\x01':
+            if lawyer.isBlocked == 1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
             if client.lawyerId != lawyer.id:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ALLOWDED_TO_ACCESS_THIS_CLIENT')
@@ -133,12 +152,12 @@ class ClientController:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
                 Staff.lawyerId == client.lawyerId,
-                Staff.isBlocked == b'\x00',
+                Staff.isBlocked == 0,
             ).first()
             if staff is None:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_LAWYER')
                 
-            if client.isBlocked == b'\x01':
+            if client.isBlocked == 1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
 
@@ -174,35 +193,104 @@ class ClientController:
     #  SOFT DELETE CLIENT
     def soft_delete_client(client_id: int, user: UserModel, db: Session):
 
-        if user is None or user.role != "lawyer":
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user is None:
+            return APIHelper.send_unauthorized_error(
+                errorMessageKey='translations.UNAUTHORIZED'
+            )
 
-        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+        if user.role != 'lawyer':
+            return APIHelper.send_forbidden_error(
+                errorMessageKey='translations.FORBIDDEN'
+            )
+
+        lawyer = db.query(Lawyers).filter(
+            Lawyers.userId == user.id
+        ).first()
+
         if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked == b'\x01':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+            return APIHelper.send_not_found_error(
+                errorMessageKey='translations.LAWYER_NOT_FOUND'
+            )
 
-        client = db.query(Clients).filter(Clients.id == client_id).first()
+        if lawyer.isBlocked == 1:
+            return APIHelper.send_forbidden_error(
+                errorMessageKey='translations.BLOCKED'
+            )
+
+        client = db.query(Clients).filter(
+            Clients.id == client_id,
+            Clients.isDeleted == 0
+        ).first()
+
         if client is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.CLIENT_NOT_FOUND')
+            return APIHelper.send_not_found_error(
+                errorMessageKey='translations.CLIENT_NOT_FOUND'
+            )
+
         if client.lawyerId != lawyer.id:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ALLOWDED_TO_ACCESS_THIS_CLIENT')
+            return APIHelper.send_forbidden_error(
+                errorMessageKey='translations.NOT_ALLOWED'
+            )
 
-        client.isDeleted = 1
-        db.commit()
-        return {"message": "Client soft deleted successfully"}
+        try:
+            # 1. Soft delete client
+            client.isDeleted = 1
 
+            # 2. Get all cases of this client
+            cases = db.query(Cases).filter(
+                Cases.clientId == client_id,
+                Cases.isDeleted == 0
+            ).all()
+
+            case_ids = [case.id for case in cases]
+
+            # 3. Soft delete cases
+            db.query(Cases).filter(
+                Cases.id.in_(case_ids)
+            ).update({"isDeleted": 1}, synchronize_session=False)
+
+            # 4. Soft delete related tables
+            db.query(Documents).filter(
+                Documents.caseId.in_(case_ids)
+            ).update({"isDeleted": 1}, synchronize_session=False)
+
+            db.query(Tasks).filter(
+                Tasks.caseId.in_(case_ids)
+            ).update({"isDeleted": 1}, synchronize_session=False)
+
+            db.query(CaseStatusHistories).filter(
+                CaseStatusHistories.caseId.in_(case_ids)
+            ).update({"isDeleted": 1}, synchronize_session=False)
+
+            db.query(CourtSessions).filter(
+                CourtSessions.caseId.in_(case_ids)
+            ).update({"isDeleted": 1}, synchronize_session=False)
+
+            db.query(Invoices).filter(
+                Invoices.caseId.in_(case_ids)
+            ).update({"isDeleted": 1}, synchronize_session=False)
+
+            db.commit()
+
+            return {"message": "Client and all related data soft deleted successfully"}
+
+        except Exception as e:
+            db.rollback()
+            return APIHelper.send_bad_request_error(
+                errorMessageKey='translations.DB_ERROR'
+            )
     #  BLOCK CLIENT
     def block_client(client_id: int, user: UserModel, db: Session):
 
-        if user is None or user.role != "lawyer":
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if lawyer is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked == b'\x01':
+        if lawyer.isBlocked == 1:
              return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         client = db.query(Clients).filter(Clients.id == client_id).first()
@@ -211,6 +299,6 @@ class ClientController:
         if client.lawyerId != lawyer.id:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
 
-        client.isBlocked = b'\x01'
+        client.isBlocked = 1
         db.commit()
         return {"message": "Client blocked successfully"}

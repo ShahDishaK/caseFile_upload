@@ -12,11 +12,12 @@ class CaseController:
     #  CREATE
     def create_case(create_case_request: CreateCaseRequest, user: UserModel, db: Session):
 
-        if user is None or user.role != 'lawyer':
+        if user is None:
             return APIHelper.send_unauthorized_error(
                 errorMessageKey='translations.UNAUTHORIZED'
             )
-
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()
@@ -25,7 +26,7 @@ class CaseController:
             return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
         #  FIXED BLOCK CHECK
-        if lawyer.isBlocked == b'\x01':
+        if lawyer.isBlocked ==1:
             return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
         new_history = CaseStatusHistories(
             caseId=create_case_request.caseId,
@@ -43,8 +44,10 @@ class CaseController:
     #  READ ALL
     def read_all(user: UserModel, db: Session):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         # ================= LAWYER =================
         if user.role == 'lawyer':
@@ -56,13 +59,14 @@ class CaseController:
             if not lawyer:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            if lawyer.isBlocked == b'\x01':
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+            if lawyer.isBlocked == 1 or lawyer.isDeleted==1:
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_DELETED')
 
             histories = db.query(CaseStatusHistories).join(
                 Cases, CaseStatusHistories.caseId == Cases.id
             ).filter(
-                Cases.lawyerId == lawyer.id
+                Cases.lawyerId == lawyer.id,
+                CaseStatusHistories.isDeleted==0
             ).all()
 
             return histories
@@ -76,7 +80,8 @@ class CaseController:
                 Staff, Staff.caseId == Cases.id
             ).filter(
                 Staff.user_id == user.id,
-                Staff.isBlocked == b'\x00'   
+                Staff.isBlocked == 0  ,
+                CaseStatusHistories.isDeleted==0
             ).all()
 
             if not histories:
@@ -94,8 +99,10 @@ class CaseController:
         db: Session
     ):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         # ================= LAWYER =================
         if user.role == 'lawyer':
@@ -106,14 +113,15 @@ class CaseController:
 
             if not lawyer:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-            if lawyer.isBlocked == b'\x01':
+            if lawyer.isBlocked == 1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             history = db.query(CaseStatusHistories).join(
                 Cases, CaseStatusHistories.caseId == Cases.id
             ).filter(
                 CaseStatusHistories.id == history_id,
-                Cases.lawyerId == lawyer.id
+                Cases.lawyerId == lawyer.id,
+                CaseStatusHistories.isDeleted==0
             ).first()
 
             if not history:
@@ -130,7 +138,8 @@ class CaseController:
             ).filter(
                 CaseStatusHistories.id == history_id,
                 Staff.user_id == user.id,
-                Staff.isBlocked == b'\x00'   
+                Staff.isBlocked ==0  ,
+                CaseStatusHistories.isDeleted==0
             ).first()
 
             if not history:
@@ -155,8 +164,10 @@ class CaseController:
     #  DELETE
     def delete_case(case_history_id: int, user: UserModel, db: Session):
 
-        if user is None or user.role != 'lawyer':
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
@@ -165,11 +176,12 @@ class CaseController:
         if not lawyer:
             return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-        if lawyer.isBlocked == b'\x01':
+        if lawyer.isBlocked == 1:
             return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         history = db.query(CaseStatusHistories).filter(
-            CaseStatusHistories.id == case_history_id
+            CaseStatusHistories.id == case_history_id,
+                CaseStatusHistories.isDeleted==0
         ).first()
 
         if not history:

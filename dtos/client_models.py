@@ -1,7 +1,10 @@
 from typing import Optional
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr,EmailStr
 
 class ClientModel(BaseModel):
+    email: EmailStr
+    password: str
+    companyId:Optional[int]=None
     name: str
     firstName:str
     lastName:str
@@ -12,10 +15,7 @@ class ClientModel(BaseModel):
     vatNumber:int
     vatPercentage:int
     occupation:str
-    userId:int
-    isDeleted: Optional[int] = False
-    isBlocked: Optional[int] = False
-    
+
 class UpdateClientRequest(BaseModel):
     name: Optional[str] = None
     firstName:Optional[str] = None
@@ -31,3 +31,4 @@ class UpdateClientRequest(BaseModel):
     lawyerId :Optional[int]=None
     isDeleted: Optional[int] = None
     isBlocked: Optional[int] = None
+    companyId:Optional[int]=None

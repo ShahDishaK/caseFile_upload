@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import date
 from enum import Enum
 
 class CaseStatus(str, Enum):
@@ -14,7 +14,7 @@ class CaseModel(BaseModel):
     type:str
     description : str
     status: CaseStatus
-    caseClosedDate: Optional[datetime] = None
+    caseClosedDate: Optional[date] = None
     caseStage:str
     caseCity:str
     clientId: Optional[int] = None
@@ -26,6 +26,6 @@ class UpdateCaseRequest(BaseModel):
     description: Optional[str] = None
     staffId: Optional[int] = None
     status: Optional[CaseStatus] = None
-    caseCloseDate: Optional[datetime] = None
+    caseCloseDate: Optional[date] = None
     clientId: Optional[int] = None
     lawyerId: Optional[int] = None

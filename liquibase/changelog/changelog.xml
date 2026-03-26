@@ -1034,5 +1034,88 @@
         columnNames="caseNumber"/>
 
 </changeSet>
+<changeSet id="add-dueDate-to-tasks" author="disha">
+    
+    <addColumn tableName="tasks">
+        <column name="dueDate" type="DATETIME">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
 
+</changeSet>
+<changeSet id="add-default-status-pending" author="disha">
+
+    <addDefaultValue 
+        tableName="tasks"
+        columnName="status"
+        defaultValue="pending"/>
+
+</changeSet>
+<changeSet id="modify-dueDate-to-date" author="disha">
+
+    <modifyDataType 
+        tableName="tasks"
+        columnName="dueDate"
+        newDataType="DATE"/>
+
+    <rollback>
+        <modifyDataType 
+            tableName="tasks"
+            columnName="dueDate"
+            newDataType="DATETIME"/>
+    </rollback>
+
+</changeSet>
+
+<changeSet id="modify-caseClosedDate-to-date" author="disha">
+
+    <modifyDataType 
+        tableName="cases"
+        columnName="caseClosedDate"
+        newDataType="DATE"/>
+
+    <rollback>
+        <modifyDataType 
+            tableName="cases"
+            columnName="caseClosedDate"
+            newDataType="DATETIME"/>
+    </rollback>
+
+</changeSet>
+<changeSet id="drop-status-from-invoices" author="disha">
+<dropColumn 
+        tableName="invoices"
+        columnName="status"/>
+
+</changeSet>
+<changeSet id="add-status-to-invoices" author="disha">
+
+    <addColumn tableName="invoices">
+
+        <column name="status" type="VARCHAR(250)" defaultValue="pending">
+            <constraints nullable="false"/>
+        </column>
+
+    </addColumn>
+
+</changeSet>
+<changeSet id="add-isDeleted-in-tables" author="disha">
+
+    <addColumn tableName="invoices">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+    <addColumn tableName="documents">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+    <addColumn tableName="tasks">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+    <addColumn tableName="caseStatusHistories">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
 </databaseChangeLog>

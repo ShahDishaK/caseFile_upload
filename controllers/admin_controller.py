@@ -15,9 +15,10 @@ from models.tasks_table import Tasks, TaskStatus
 class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts
     def get_case_counts(user: UserModel,db: Session):
-        if user is None or user.role != "admin":
+        if user is None :
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         
         open_cases = db.query(func.count(Cases.id)).filter(
@@ -43,9 +44,10 @@ class AdminController:
     
     # case status count
     def get_case_status_count(user:UserModel,db:Session):
-        if user is None or user.role!='admin':
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
         last_thirty_days=datetime.utcnow()-timedelta(days=30)
         
         closed_last_30_days=db.query(func.count(CaseStatusHistories.id)).filter(
@@ -58,11 +60,12 @@ class AdminController:
     
     # task count based on due
     def task_counts(user:UserModel,db: Session):
-        if user is None or user.role!='admin':
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-
-        today_tasks = db.query(func.count(Tasks.id)).filter(
-            Tasks.status == TaskStatus.TODAY
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        pending_tasks = db.query(func.count(Tasks.id)).filter(
+            Tasks.status == TaskStatus.PENDING
         ).scalar()
 
         overdue_tasks = db.query(func.count(Tasks.id)).filter(
@@ -74,16 +77,17 @@ class AdminController:
         ).scalar()
 
         return {
-            "dueToday": today_tasks,
+            "pending": pending_tasks,
             "overdue": overdue_tasks,
             "completed": completed_tasks
         }
     
     def company_users(company_id: int, user: UserModel, db: Session):
 
-        if user is None or user.role != 'admin':
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
         if company is None:
@@ -92,13 +96,11 @@ class AdminController:
         lawyers = db.query(User).filter(
             User.companyId == company_id,
             User.role == UserRole.LAWYER,
-            User.isDeleted.is_(False)
         ).all()
 
         staff = db.query(User).filter(
             User.companyId == company_id,
             User.role == UserRole.STAFF,
-            User.isDeleted.is_(False)
         ).all()
 
         return {

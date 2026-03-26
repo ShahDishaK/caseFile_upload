@@ -22,23 +22,25 @@ class InvoiceController:
 
     # ================= LAWYER CREATES INVOICE =================
     def create_invoice(create_invoice_request: InvoiceModel, user: User, db: Session):
-        if user is None or user.role != UserRole.LAWYER:
+        if user is None:
             return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
             return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
 
-        if lawyer.isBlocked==b'\x01':
+        if lawyer.isBlocked==1:
             return APIHelper.send_forbidden_error('translations.BLOCKED')
 
         invoice = Invoices(
             totalAmount=create_invoice_request.totalAmount,
             totalHours=create_invoice_request.totalHours,
-            status=InvoiceStatus.pending,
             caseId=create_invoice_request.caseId,
             clientId=create_invoice_request.clientId,
             lawyerId=lawyer.id,
+            status=InvoiceStatus.pending,
             companyId=create_invoice_request.companyId,
             paymentStatus="pending"
         )
@@ -51,14 +53,19 @@ class InvoiceController:
 
     # ================= CREATE STRIPE PAYMENT SESSION =================
     def create_payment_session(invoice_id: int, user: User, db: Session):
-        if user is None or user.role != UserRole.CLIENT:
+        if user is None:
             return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
+        if user.role!='client':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         invoice = db.query(Invoices).filter(
             Invoices.id == invoice_id,
             Invoices.clientId == Clients.id
         ).first()
-
+        if invoice.status==InvoiceStatus.paid:
+            return APIHelper.send_bad_request_error(
+                    errorMessageKey="translations.INVOICE_ALREADY_PAID"
+                        )
         if not invoice:
             return APIHelper.send_not_found_error('translations.INVOICE_NOT_FOUND')
 
@@ -139,21 +146,23 @@ class InvoiceController:
 
     # ================= READ INVOICES =================
     def read_all(user: User, db: Session, status: str = None):
-        if user is None or user.role not in [UserRole.LAWYER, UserRole.CLIENT, UserRole.ADMIN]:
+        if user is None:
             return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
+        if user.role not in [UserRole.LAWYER, UserRole.CLIENT, UserRole.ADMIN]:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
             if not lawyer:
                 return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-            if lawyer.isBlocked==b'\x01':
+            if lawyer.isBlocked==1:
                 return APIHelper.send_forbidden_error('translations.BLOCKED')
 
-            query = db.query(Invoices).filter(Invoices.lawyerId == lawyer.id)
+            query = db.query(Invoices).filter(Invoices.lawyerId == lawyer.id,Invoices.isDeleted==0)
 
         elif user.role == UserRole.CLIENT:
             client = db.query(Clients).filter(Clients.userId == user.id).first()
-            query = db.query(Invoices).filter(Invoices.clientId == client.id)
+            query = db.query(Invoices).filter(Invoices.clientId == client.id,Invoices.isDeleted==0)
 
         else:
             query = db.query(Invoices)
@@ -169,22 +178,27 @@ class InvoiceController:
 
     # ================= UPDATE INVOICE =================
     def update_invoice(invoice_id: int, update_invoice_request: UpdateInvoiceRequest, user: User, db: Session):
-        if user is None or user.role != UserRole.LAWYER:
+        if user is None:
             return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
             return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked==b'\x01':
+        if lawyer.isBlocked==1:
             return APIHelper.send_forbidden_error('translations.BLOCKED')
 
-        invoice = db.query(Invoices).filter(Invoices.id == invoice_id).first()
+        invoice = db.query(Invoices).filter(Invoices.id == invoice_id,Invoices.isDeleted==0).first()
         if not invoice:
             return APIHelper.send_not_found_error('translations.INVOICE_NOT_FOUND')
 
         if invoice.lawyerId != lawyer.id:
             return APIHelper.send_forbidden_error('translations.NOT_YOUR_INVOICE')
-
+        if invoice.status==InvoiceStatus.paid:
+            return APIHelper.send_bad_request_error(
+                    errorMessageKey="translations.INVOICE_ALREADY_PAID"
+                        )
         update_data = update_invoice_request.dict(exclude_unset=True, exclude_none=True)
 
         for key, value in update_data.items():
@@ -200,22 +214,27 @@ class InvoiceController:
 
     # ================= DELETE INVOICE =================
     def delete_invoice(invoice_id: int, user: User, db: Session):
-        if user is None or user.role != UserRole.LAWYER:
+        if user is None:
             return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
+        if user.role!='lawyer':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
             return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked==b'\x01':
+        if lawyer.isBlocked==1:
             return APIHelper.send_forbidden_error('translations.BLOCKED')
 
-        invoice = db.query(Invoices).filter(Invoices.id == invoice_id).first()
+        invoice = db.query(Invoices).filter(Invoices.id == invoice_id,Invoices.isDeleted==0).first()
         if not invoice:
             return APIHelper.send_not_found_error('translations.INVOICE_NOT_FOUND')
 
         if invoice.lawyerId != lawyer.id:
             return APIHelper.send_forbidden_error('translations.NOT_YOUR_INVOICE')
-
+        if invoice.status==InvoiceStatus.paid:
+            return APIHelper.send_bad_request_error(
+                    errorMessageKey="translations.INVOICE_ALREADY_PAID"
+                        )
         db.delete(invoice)
         db.commit()
 
@@ -223,8 +242,10 @@ class InvoiceController:
 
     # ================= ADMIN TOTALS =================
     def get_admin_invoice_totals(user: User, db: Session):
-        if user is None or user.role != UserRole.ADMIN:
+        if user is None:
             return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         total_paid = db.query(func.sum(Invoices.totalAmount)) \
             .filter(Invoices.status == InvoiceStatus.paid).scalar() or 0
@@ -232,7 +253,7 @@ class InvoiceController:
         total_pending = db.query(func.sum(Invoices.totalAmount)) \
             .filter(Invoices.status == InvoiceStatus.pending).scalar() or 0
 
-        invoices = db.query(Invoices).all()
+        invoices = db.query(Invoices).filter(Invoices.isDeleted==0).all()
 
         return {
             "invoices": invoices,

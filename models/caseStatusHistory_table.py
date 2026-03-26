@@ -14,8 +14,9 @@ class CaseStatusHistories(Base):
     __tablename__="caseStatusHistories"
 
     id = Column(Integer, primary_key=True, index=True)
-    caseId=Column(Integer, ForeignKey('documents.id'), nullable=False)
+    caseId=Column(Integer, ForeignKey('cases.id'), nullable=False)
     oldStatus=Column(SQLEnum(CaseStatus), nullable=True)
     newStatus=Column(SQLEnum(CaseStatus), nullable=True)
+    isDeleted=Column(Integer,nullable=False,default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

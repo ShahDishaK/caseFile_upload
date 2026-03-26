@@ -40,3 +40,11 @@ async def delete_task(
     db: Session = Depends(get_db)
 ):
     return TaskController.delete_task(task_id,user,db)
+
+@task.patch("/task/{task_id}/markAsDone")
+async def mark_task_done(
+    task_id: int,
+    user: UserModel = Depends(TokenHelper.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TaskController.mark_as_done(task_id, user, db)

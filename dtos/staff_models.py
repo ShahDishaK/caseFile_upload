@@ -1,14 +1,16 @@
 from typing import Optional
-from pydantic import BaseModel,constr
+from pydantic import BaseModel,constr,EmailStr
 
 class StaffModel(BaseModel):
+    email: EmailStr
+    password: str
+    companyId:Optional[int]=None
     name: str
     firstName:str
     lastName:str
     phoneNumber: Optional[constr(regex="^[0-9]{10}$")]
     gender:str
     address: Optional[str] = None
-    user_id :int
     caseId :int
 
 class UpdateStaffRequest(BaseModel):
@@ -22,3 +24,4 @@ class UpdateStaffRequest(BaseModel):
     caseId :Optional[int]=None
     lawyerId:Optional[int]=None
     isBlocked:Optional[int]=None
+    companyId:Optional[int]=None

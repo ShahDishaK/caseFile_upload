@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer,Date, String, DateTime, ForeignKey, Enum as SQLEnum
 from datetime import datetime
 from config.db_config import Base
 from datetime import datetime
@@ -6,7 +6,7 @@ from enum import Enum
 
 
 class TaskStatus(str, Enum):
-    TODAY = "today"
+    PENDING = "pending"
     OVERDUE = "overdue"
     COMPLETED = "completed"
 
@@ -20,5 +20,7 @@ class Tasks(Base):
     assignedTo=Column(Integer,ForeignKey('users.id'), nullable=True)
     priority=Column(String,nullable=True)
     status=Column(SQLEnum(TaskStatus), nullable=False)
+    dueDate=Column(Date,nullable=True)
+    isDeleted=Column(Integer,nullable=False,default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

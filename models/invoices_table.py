@@ -31,5 +31,6 @@ class Invoices(Base):
     paymentStatus = Column(SQLEnum(PaymentStatus), default=PaymentStatus.pending)
     paymentMethod = Column(String(50), nullable=True)
     paidAt = Column(DateTime, nullable=True)
+    isDeleted=Column(Integer,nullable=False,default=0)
     createdAt = Column(DateTime, default=datetime.utcnow)
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

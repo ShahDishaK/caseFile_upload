@@ -8,8 +8,10 @@ class CompanyController:
 
    
     def create_company(create_company_request: CompanyModel, user: UserModel, db: Session):
-        if user is None or user.role != 'admin':
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         company = Companies(
             name=create_company_request.name,
@@ -27,8 +29,10 @@ class CompanyController:
 
    
     def read_all(user: UserModel, db: Session):
-        if user is None or user.role != 'admin':
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         return db.query(Companies).all()
 
@@ -36,8 +40,10 @@ class CompanyController:
    
     def update_company(company_id: int, update_company_request: UpdateCompanyRequest, user: UserModel, db: Session):
 
-        if user is None or user.role != 'admin':
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
@@ -56,8 +62,10 @@ class CompanyController:
     
     def delete_company(company_id: int, user: UserModel, db: Session):
 
-        if user is None or user.role != 'admin':
+        if user is None:
             APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role!='admin':
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         company = db.query(Companies).filter(Companies.id == company_id).first()
 

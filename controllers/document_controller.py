@@ -27,8 +27,10 @@ class DocumentController:
         db
     ):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None :
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         #  LAWYER CHECK
         if user.role == 'lawyer':
@@ -37,7 +39,7 @@ class DocumentController:
             if lawyer is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            if lawyer.isBlocked == b'\x01':
+            if lawyer.isBlocked ==0:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         #  STAFF CHECK
@@ -45,7 +47,7 @@ class DocumentController:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
                 Staff.caseId == caseId,
-                Staff.isBlocked == b'\x00'
+                Staff.isBlocked == 0
             ).first()
 
             if staff is None:
@@ -82,8 +84,10 @@ class DocumentController:
     #  READ ALL DOCUMENTS
     def read_all(user: UserModel, db: Session):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
         #  LAWYER
         if user.role == 'lawyer':
@@ -92,16 +96,22 @@ class DocumentController:
             if lawyer is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            if lawyer.isBlocked == b'\x01':
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+            if lawyer.isBlocked == 1 or lawyer.isDeleted==1:
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_DELETED')
 
             documents = db.query(Documents).join(
                 Cases, Documents.caseId == Cases.id
             ).filter(
-                Cases.lawyerId == lawyer.id
+                Cases.lawyerId == lawyer.id,Documents.isDeleted==0
             ).all()
 
-            return documents
+            return [
+                    {
+                        "document":doc,
+                        "case":case
+                    }
+                    for doc, case in documents
+                ]
 
         #  STAFF
         else:
@@ -111,7 +121,8 @@ class DocumentController:
                 Staff, Staff.caseId == Cases.id
             ).filter(
                 Staff.user_id == user.id,
-                Staff.isBlocked == b'\x00'
+                Staff.isBlocked == 0,
+                Documents.isDeleted==0
             ).all()
 
             if not documents:
@@ -135,10 +146,12 @@ class DocumentController:
     db
 ):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
-        document = db.query(Documents).filter(Documents.id == document_id).first()
+        document = db.query(Documents).filter(Documents.id == document_id,Documents.isDeleted==0).first()
 
         if document is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
@@ -150,7 +163,7 @@ class DocumentController:
             if lawyer is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            if lawyer.isBlocked == b'\x01':
+            if lawyer.isBlocked == 1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
         #  STAFF CHECK
@@ -158,7 +171,7 @@ class DocumentController:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
                 Staff.caseId == document.caseId,
-                Staff.isBlocked == b'\x00'
+                Staff.isBlocked == 0,
             ).first()
 
             if staff is None:
@@ -202,10 +215,12 @@ class DocumentController:
     #  DELETE DOCUMENT
     def delete_document(document_id: int, user: UserModel, db: Session):
 
-        if user is None or user.role not in ['lawyer', 'staff']:
+        if user is None:
             return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        if user.role not in ['lawyer','staff']:
+            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
-        document = db.query(Documents).filter(Documents.id == document_id).first()
+        document = db.query(Documents).filter(Documents.id == document_id,Documents.isDeleted==0).first()
 
         if document is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
@@ -217,7 +232,7 @@ class DocumentController:
             if lawyer is None:
                 return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-            if lawyer.isBlocked == b'\x01':
+            if lawyer.isBlocked == 1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
 
             case = db.query(Cases).filter(Cases.id == document.caseId).first()
@@ -230,7 +245,7 @@ class DocumentController:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
                 Staff.caseId == document.caseId,
-                Staff.isBlocked == b'\x00'
+                Staff.isBlocked == 0
             ).first()
 
             if staff is None:
