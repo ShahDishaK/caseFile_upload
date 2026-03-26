@@ -99,11 +99,13 @@ class DocumentController:
             if lawyer.isBlocked == 1 or lawyer.isDeleted==1:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_DELETED')
 
-            documents = db.query(Documents).join(
-                Cases, Documents.caseId == Cases.id
-            ).filter(
-                Cases.lawyerId == lawyer.id,Documents.isDeleted==0
-            ).all()
+            documents = db.query(Documents, Cases).join(
+                    Cases, Documents.caseId == Cases.id
+                ).filter(
+                    Cases.lawyerId == lawyer.id,
+                    Documents.isDeleted == 0,
+                    Cases.isDeleted == 0
+                ).all()
 
             return [
                     {
@@ -129,7 +131,13 @@ class DocumentController:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_AVAILABLE_DOCUMENTS')
                 
 
-            return documents
+            return [
+                    {
+                        "document":doc,
+                        "case":case
+                    }
+                    for doc, case in documents
+                ]
 
 
     #  UPDATE DOCUMENT
