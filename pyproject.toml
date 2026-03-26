@@ -18,6 +18,7 @@ cryptography = "^39.0.0"
 Jinja2 = "^3.1.2"
 python-i18n = "^0.3.9"
 python-multipart = "^0.0.5"
+psycopg2-binary = "^2.9.11"
 
 [tool.poetry.dev-dependencies]
 

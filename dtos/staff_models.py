@@ -11,7 +11,7 @@ class StaffModel(BaseModel):
     phoneNumber: Optional[constr(regex="^[0-9]{10}$")]
     gender:str
     address: Optional[str] = None
-    caseId :int
+    caseId :Optional[int]=None
 
 class UpdateStaffRequest(BaseModel):
     name: Optional[str] = None
