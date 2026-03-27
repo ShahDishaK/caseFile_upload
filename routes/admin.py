@@ -31,4 +31,4 @@ async def comapny_users(company_id:int,user: UserModel = Depends(TokenHelper.get
 
 @admin.post("/dashboard/")
 async def create_admins(create_admin_request:CreateAdminRequest,db: Session = Depends(get_db)):
-    return AdminController.company_users(create_admin_request,db)
+    return AdminController.create_admins(create_admin_request,db)
