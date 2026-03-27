@@ -30,5 +30,5 @@ async def comapny_users(company_id:int,user: UserModel = Depends(TokenHelper.get
     return AdminController.company_users(company_id,user,db)
 
 @admin.post("/dashboard/")
-async def create_admins(create_admin_request:CreateAdminRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+async def create_admins(create_admin_request:CreateAdminRequest,db: Session = Depends(get_db)):
     return AdminController.company_users(create_admin_request,user,db)
