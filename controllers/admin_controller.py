@@ -146,7 +146,8 @@ class AdminController:
                 phoneNumber=create_admin_request.phoneNumber,
                 address=create_admin_request.address,
                 gender=create_admin_request.gender,
-                role=UserRole.ADMIN
+                role=UserRole.ADMIN,
+                companyId=1
             )
     
             db.add(admin)
