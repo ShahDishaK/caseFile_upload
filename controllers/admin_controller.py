@@ -14,6 +14,8 @@ from sqlalchemy import  func
 from models.tasks_table import Tasks, TaskStatus
 from dtos.admin_models import AdminModel as CreateAdminRequest
 from models.users_table import User
+import traceback
+
 
 class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts
@@ -132,9 +134,10 @@ class AdminController:
                 successMessageKey='translations.SUCCESS'
             )
 
+
     def create_admins(create_admin_request: CreateAdminRequest, db: Session):
         try:
-            admin=User(
+            admin = User(
                 name=create_admin_request.name,
                 firstName=create_admin_request.firstName,
                 lastName=create_admin_request.lastName,
@@ -145,14 +148,20 @@ class AdminController:
                 gender=create_admin_request.gender,
                 role=UserRole.ADMIN
             )
+    
             db.add(admin)
             db.commit()
-            db.refresh(admin)  
-            response_data={"admin":admin}
+            db.refresh(admin)
+    
             return APIHelper.send_success_response(
-                data=response_data,
+                data={"admin": admin},
                 successMessageKey='translations.SUCCESS'
             )
-        except:
+    
+        except Exception as e:
+            print("🔥 ERROR:", str(e))
+            traceback.print_exc()   # 👈 VERY IMPORTANT
             db.rollback()
-            return APIHelper.send_bad_request_error(errorMessageKey="translations.BD_ERROR")
+            return APIHelper.send_bad_request_error(
+                errorMessageKey="translations.BD_ERROR"
+            )
