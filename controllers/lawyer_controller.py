@@ -114,9 +114,6 @@ class LawyerController:
 
 
     def delete_lawyer(lawyer_id: int, user: UserModel, db: Session):
-
-            print("DELETE API HIT FOR ID:", lawyer_id)
-
             if user is None:
                 return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
             if user.role!='admin':
@@ -131,10 +128,8 @@ class LawyerController:
 
             db.commit()
             db.refresh(lawyer)
-            
-            print("AFTER COMMIT:", lawyer.isDeleted)
-
             return APIHelper.send_success_response(successMessageKey='translations.SUCCESS')
+   
     def block_lawyer(lawyer_id: int, user: UserModel,db: Session):
 
         if user is None:

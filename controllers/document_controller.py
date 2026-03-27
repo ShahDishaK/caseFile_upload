@@ -78,7 +78,11 @@ class DocumentController:
         db.commit()
         db.refresh(document)
 
-        return document
+        response_data={"document":document}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
 
     #  READ ALL DOCUMENTS
@@ -107,13 +111,17 @@ class DocumentController:
                     Cases.isDeleted == 0
                 ).all()
 
-            return [
+            response_data= [
                     {
                         "document":doc,
                         "case":case
                     }
                     for doc, case in documents
                 ]
+            return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
         #  STAFF
         else:
@@ -131,13 +139,17 @@ class DocumentController:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_AVAILABLE_DOCUMENTS')
                 
 
-            return [
+            response_data= [
                     {
                         "document":doc,
                         "case":case
                     }
                     for doc, case in documents
                 ]
+            return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
 
     #  UPDATE DOCUMENT
@@ -217,7 +229,11 @@ class DocumentController:
         db.commit()
         db.refresh(document)
 
-        return document
+        response_data={"document":document}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
 
     #  DELETE DOCUMENT
@@ -263,4 +279,8 @@ class DocumentController:
         db.delete(document)
         db.commit()
 
-        return {"message": "Document deleted successfully"}
+        response_data= {"message": "Document deleted successfully"}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )

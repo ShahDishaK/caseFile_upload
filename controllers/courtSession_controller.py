@@ -28,7 +28,11 @@ class CourtSessionController:
         )
         db.add(create_session_model)
         db.commit()
-        return create_session_model
+        response_data={"session":create_session_model}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     def read_all(user: UserModel, db: Session):
 
@@ -62,10 +66,14 @@ class CourtSessionController:
             CourtSessions.lawyerId == lawyer.id,
             Cases.isDeleted == 0
         ).all()
-        return [
+        response_data= [
             {
                 "session": session,
                 "case": case
             }
             for session, case in sessions
         ]
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )

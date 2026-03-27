@@ -24,7 +24,11 @@ class CompanyController:
         db.commit()
         db.refresh(company)
 
-        return company
+        response_data={"company":company}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
 
    
@@ -34,7 +38,13 @@ class CompanyController:
         if user.role!='admin':
             return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
 
-        return db.query(Companies).all()
+        company= db.query(Companies).all()
+        response_data={"company":company}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
+
 
 
    
@@ -58,7 +68,11 @@ class CompanyController:
         db.commit()
         db.refresh(company)
 
-        return company
+        response_data={"company":company}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
     
     def delete_company(company_id: int, user: UserModel, db: Session):
 
@@ -75,4 +89,8 @@ class CompanyController:
         db.delete(company)
         db.commit()
 
-        return {"message": "Company deleted successfully"}
+        response_data= {"message": "Company deleted successfully"}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )

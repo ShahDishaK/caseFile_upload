@@ -49,7 +49,11 @@ class InvoiceController:
         db.commit()
         db.refresh(invoice)
 
-        return invoice
+        response_data={"invoice":invoice}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     # ================= CREATE STRIPE PAYMENT SESSION =================
     def create_payment_session(invoice_id: int, user: User, db: Session):
@@ -174,7 +178,11 @@ class InvoiceController:
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid status")
 
-        return query.all()
+        response_data=query.all()
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     # ================= UPDATE INVOICE =================
     def update_invoice(invoice_id: int, update_invoice_request: UpdateInvoiceRequest, user: User, db: Session):
@@ -238,7 +246,11 @@ class InvoiceController:
         db.delete(invoice)
         db.commit()
 
-        return {"message": "Invoice deleted successfully"}
+        response_data= {"message": "Invoice deleted successfully"}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     # ================= ADMIN TOTALS =================
     def get_admin_invoice_totals(user: User, db: Session):
@@ -255,8 +267,12 @@ class InvoiceController:
 
         invoices = db.query(Invoices).filter(Invoices.isDeleted==0).all()
 
-        return {
+        response_data= {
             "invoices": invoices,
             "total_paid": float(total_paid),
             "total_pending": float(total_pending)
         }
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )

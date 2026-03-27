@@ -56,9 +56,13 @@ class CaseController:
             db.commit()
             db.refresh(case)
 
-            return case
+            response_data={"case":case}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
         except SQLAlchemyError as e:
-            db.rollback()  # VERY IMPORTANT
+            db.rollback() 
             return APIHelper.send_bad_request_error(
                 errorMessageKey='translations.DB_ERROR'
             )
@@ -97,7 +101,11 @@ class CaseController:
                 Cases.isDeleted ==0
             ).all()
 
-            return cases
+            response_data={"cases":cases}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
         # ================= STAFF =================
         elif user.role == 'staff':
@@ -127,7 +135,11 @@ class CaseController:
                 Cases.isDeleted == 0
             ).all()
 
-            return cases
+            response_data={"cases":cases}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
 
     #  UPDATE CASE
@@ -213,7 +225,11 @@ class CaseController:
         db.commit()
         db.refresh(case)
 
-        return case
+        response_data={"case":case}
+        return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
 
     #  SOFT DELETE
@@ -282,8 +298,11 @@ class CaseController:
 
             db.commit()
 
-            return {"message": "Case and related data soft deleted successfully"}
-
+            response_data= {"message": "Case and related data soft deleted successfully"}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
         except Exception as e:
             db.rollback()
             return APIHelper.send_bad_request_error(

@@ -6,23 +6,34 @@ from fastapi import Depends
 from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 
+# Load environment variables
 load_dotenv()
 
-DATABASE_USER = os.getenv("DATABASE_USER")
-DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
-DATABASE_HOST = os.getenv("DATABASE_HOST")
-DATABASE_PORT = os.getenv("DATABASE_PORT")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
+# ✅ Get DATABASE_URL from Render environment
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-DATABASE_URL = f"mysql+pymysql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
+# 🔥 Safety check (very important)
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in environment variables")
 
-engine = create_engine(DATABASE_URL, pool_recycle=3600)
+# ✅ Create engine (PostgreSQL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True  # prevents connection issues
+)
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+# ✅ Session
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False
+)
 
+# ✅ Base class
 Base = declarative_base()
 
 
+# ✅ Dependency for FastAPI routes
 def get_db():
     db = SessionLocal()
     try:
@@ -30,4 +41,6 @@ def get_db():
     finally:
         db.close()
 
+
+# ✅ Type-safe dependency (optional but good)
 dp_dependency = Annotated[Session, Depends(get_db)]

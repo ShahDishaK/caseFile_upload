@@ -28,17 +28,25 @@ class CaseController:
         #  FIXED BLOCK CHECK
         if lawyer.isBlocked ==1:
             return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
-        new_history = CaseStatusHistories(
-            caseId=create_case_request.caseId,
-            oldStatus=create_case_request.oldStatus,
-            newStatus=create_case_request.newStatus,
-        )
+        try:
+            new_history = CaseStatusHistories(
+                caseId=create_case_request.caseId,
+                oldStatus=create_case_request.oldStatus,
+                newStatus=create_case_request.newStatus,
+            )
 
-        db.add(new_history)
-        db.commit()
-        db.refresh(new_history)
+            db.add(new_history)
+            db.commit()
+            db.refresh(new_history)
 
-        return new_history
+            response_data={"history":new_history}
+            return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
+        except:
+            db.rollback()
+            return APIHelper.send_bad_request_error(errorMessageKey="translations.DB_ERROR")
 
 
     #  READ ALL
@@ -69,7 +77,11 @@ class CaseController:
                 CaseStatusHistories.isDeleted==0
             ).all()
 
-            return histories
+            response_data={"sattus_histories":histories}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
         # ================= STAFF =================
         else:
@@ -86,10 +98,11 @@ class CaseController:
 
             if not histories:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGENED_TO_HISTORY')
-
-
-            return histories
-
+            response_data={"sattus_histories":histories}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
     #  UPDATE
     def update_case(
@@ -158,7 +171,11 @@ class CaseController:
         db.commit()
         db.refresh(history)
 
-        return history
+        response_data={"sattus_histories":history}
+        return APIHelper.send_success_response(
+            data=response_data,
+            successMessageKey='translations.SUCCESS'
+        )
 
 
     #  DELETE
@@ -201,4 +218,8 @@ class CaseController:
         db.delete(history)
         db.commit()
 
-        return {"message": "Case history deleted successfully"}
+        response_data= {"message": "Case history deleted successfully"}
+        return APIHelper.send_success_response(
+            data=response_data,
+            successMessageKey='translations.SUCCESS'
+        )
