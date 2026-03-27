@@ -143,7 +143,7 @@ class AdminController:
                 phoneNumber=create_admin_request.phoneNumber,
                 address=create_admin_request.address,
                 gender=create_admin_request.gender,
-                role="admin"
+                role=UserRole.ADMIN
             )
             db.add(admin)
             db.commit()
