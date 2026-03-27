@@ -41,8 +41,7 @@ class AdminController:
             Cases.isDeleted ==b'\x00'
         ).scalar()
 
-        return
-           { "openCases": open_cases,
+        return { "openCases": open_cases,
             "closedCases": closed_cases,
             "newCasesLast30Days": new_cases}
        
