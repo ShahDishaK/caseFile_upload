@@ -132,7 +132,7 @@ class AdminController:
                 successMessageKey='translations.SUCCESS'
             )
 
-    def create_admins(create_admin_request: CreateAdminRequest,user: UserModel, db: Session):
+    def create_admins(create_admin_request: CreateAdminRequest, db: Session):
         try:
             admin=User(
                 name=create_admin_request.name,
