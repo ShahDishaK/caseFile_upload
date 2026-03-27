@@ -21,9 +21,9 @@ class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts
     def get_case_counts(user: UserModel,db: Session):
         if user is None :
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+            return "unauthorized"
         if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+            return "forbidden"
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         
         open_cases = db.query(func.count(Cases.id)).filter(
@@ -41,36 +41,29 @@ class AdminController:
             Cases.isDeleted ==b'\x00'
         ).scalar()
 
-        response_data= {
-            "openCases": open_cases,
+        return
+           { "openCases": open_cases,
             "closedCases": closed_cases,
-            "newCasesLast30Days": new_cases
-        }
-        return APIHelper.send_success_response(
-                data=response_data,
-                successMessageKey='translations.SUCCESS'
-            )
+            "newCasesLast30Days": new_cases}
+       
 
     
     # case status count
     def get_case_status_count(user:UserModel,db:Session):
         if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+            return 'translations.UNAUTHORIZED'
         if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+            return 'translations.FORBIDDEN'
         last_thirty_days=datetime.utcnow()-timedelta(days=30)
         
         closed_last_30_days=db.query(func.count(CaseStatusHistories.id)).filter(
             CaseStatusHistories.updatedAt>=last_thirty_days,
         ).scalar()
 
-        response_data= {
+        return{
         "casesStatusChangeInLast30Days": closed_last_30_days
         }
-        return APIHelper.send_success_response(
-                data=response_data,
-                successMessageKey='translations.SUCCESS'
-            )
+        
 
     
     # task count based on due
@@ -91,15 +84,12 @@ class AdminController:
             Tasks.status == TaskStatus.COMPLETED
         ).scalar()
 
-        response_data={
+        return{
             "pending": pending_tasks,
             "overdue": overdue_tasks,
             "completed": completed_tasks
         }
-        return APIHelper.send_success_response(
-                data=response_data,
-                successMessageKey='translations.SUCCESS'
-            )
+        
 
     
     def company_users(company_id: int, user: UserModel, db: Session):
@@ -123,17 +113,13 @@ class AdminController:
             User.role == UserRole.STAFF,
         ).all()
 
-        response_data= {
+        return {
             "companyId": company.id,
             "companyName": company.name,
             "lawyers": lawyers,
             "staff": staff
         }
-        return APIHelper.send_success_response(
-                data=response_data,
-                successMessageKey='translations.SUCCESS'
-            )
-
+        
 
     def create_admins(create_admin_request: CreateAdminRequest, db: Session):
         try:
@@ -154,15 +140,10 @@ class AdminController:
             db.commit()
             db.refresh(admin)
     
-            return APIHelper.send_success_response(
-                data={"admin": admin},
-                successMessageKey='translations.SUCCESS'
-            )
+            return admin
     
         except Exception as e:
             print("🔥 ERROR:", str(e))
             traceback.print_exc()   # 👈 VERY IMPORTANT
             db.rollback()
-            return APIHelper.send_bad_request_error(
-                errorMessageKey="translations.BD_ERROR"
-            )
+            return {"error":"error}
