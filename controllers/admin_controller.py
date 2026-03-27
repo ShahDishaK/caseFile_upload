@@ -145,4 +145,4 @@ class AdminController:
             print("🔥 ERROR:", str(e))
             traceback.print_exc()   # 👈 VERY IMPORTANT
             db.rollback()
-            return {"error":"error}
+            return {"error":"error"}
