@@ -142,7 +142,7 @@ class AdminController:
                 firstName=create_admin_request.firstName,
                 lastName=create_admin_request.lastName,
                 email=create_admin_request.email,
-                password=Hash.get_hash(create_admin_request.password),
+                password=create_admin_request.password,
                 phoneNumber=create_admin_request.phoneNumber,
                 address=create_admin_request.address,
                 gender=create_admin_request.gender,
